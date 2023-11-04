@@ -24,6 +24,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+        working-directory: emsa-ui
       - name: Install dependencies
         run: npm ci
         working-directory: emsa-ui
