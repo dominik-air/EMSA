@@ -1,4 +1,4 @@
-# Frontend 
+# Frontend
 
 ## Installation guide
 
@@ -10,22 +10,22 @@
 
 3. Install dependencies
 
-   ```cd emsa-ui && npm install```
+   `cd emsa-ui && npm install`
 
 4. Run the apps
 
-   ```npm run dev```
+   `npm run dev`
 
 ## Development guide
 
 ### Adding packages
 
-```npm install <package_name>```
+`npm install <package_name>`
 
 ### Linter
 
-```npm run lint```
+`npm run lint`
 
 ### Formatting
 
-```npm run format```
+`npm run format`
