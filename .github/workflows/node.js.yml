@@ -2,8 +2,8 @@ name: Node.js CI
 
 on:
   push:
-  # for frontend branches (looks for the word 'frontend' in branch name)
-    branches: ["^(.*?(\bfrontend\b)[^$]*)$"]
+    branches:
+      - '*frontend*'
   pull_request:
     branches: ["main"]
 
