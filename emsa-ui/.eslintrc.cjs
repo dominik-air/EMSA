@@ -15,7 +15,6 @@ module.exports = {
       "warn",
       { allowConstantExport: true },
     ],
-    "no-console": 1,
     "prettier/prettier": 2,
   },
 };
