@@ -6,7 +6,7 @@ import SignIn from "../components/SignIn";
 const mockLogin = jest.fn();
 const mockLogout = jest.fn();
 
-jest.mock('../components/useAuth', () => ({
+jest.mock("../components/useAuth", () => ({
   useAuth: () => ({
     isLoggedIn: false,
     login: mockLogin,
@@ -41,9 +41,9 @@ describe("<SignIn />", () => {
     );
   });
 
-  it('contains a link to the signup page', () => {
+  it("contains a link to the signup page", () => {
     render(<SignIn />);
     const signUpLink = screen.getByText("Don't have an account? Sign Up");
-    expect(signUpLink.closest('a')).toHaveAttribute('href', '/signup');
+    expect(signUpLink.closest("a")).toHaveAttribute("href", "/signup");
   });
 });

@@ -35,9 +35,9 @@ describe("<SignUp />", () => {
     expect(screen.getByLabelText(/password/i)).toHaveValue("password123");
   });
 
-    it('contains a link to the signin page', () => {
+  it("contains a link to the signin page", () => {
     render(<SignUp />);
     const signIpLink = screen.getByText("Already have an account? Sign in");
-    expect(signIpLink.closest('a')).toHaveAttribute('href', '/signin');
+    expect(signIpLink.closest("a")).toHaveAttribute("href", "/signin");
   });
 });

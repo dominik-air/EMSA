@@ -16,7 +16,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   children,
 }): ReactElement => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
-    Boolean(localStorage.getItem('sessionToken'))
+    Boolean(localStorage.getItem("sessionToken")),
   );
 
   const login = (token: string) => {
