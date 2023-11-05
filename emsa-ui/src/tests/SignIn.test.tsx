@@ -3,6 +3,17 @@ import { render, fireEvent, waitFor, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SignIn from "../components/SignIn";
 
+const mockLogin = jest.fn();
+const mockLogout = jest.fn();
+
+jest.mock("../components/useAuth", () => ({
+  useAuth: () => ({
+    isLoggedIn: false,
+    login: mockLogin,
+    logout: mockLogout,
+  }),
+}));
+
 describe("<SignIn />", () => {
   test("renders the sign-in form", () => {
     render(<SignIn />);
@@ -17,8 +28,6 @@ describe("<SignIn />", () => {
   test("allows the user to sign in", async () => {
     const { getByLabelText, getByRole } = render(<SignIn />);
 
-    const consoleSpy = jest.spyOn(console, "log");
-
     const emailInput = getByLabelText(/email address/i);
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
 
@@ -28,12 +37,13 @@ describe("<SignIn />", () => {
     fireEvent.click(getByRole("button", { name: /sign in/i }));
 
     await waitFor(() =>
-      expect(consoleSpy).toHaveBeenCalledWith({
-        email: "test@example.com",
-        password: "password123",
-      }),
+      expect(mockLogin).toHaveBeenCalledWith("test@example.com-password123"),
     );
+  });
 
-    consoleSpy.mockRestore();
+  it("contains a link to the signup page", () => {
+    render(<SignIn />);
+    const signUpLink = screen.getByText("Don't have an account? Sign Up");
+    expect(signUpLink.closest("a")).toHaveAttribute("href", "/signup");
   });
 });

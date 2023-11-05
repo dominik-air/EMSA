@@ -12,15 +12,42 @@ import Container from "@mui/material/Container";
 import { ThemeProvider } from "@mui/material/styles";
 import logo from "../assets/emsa-logo.png";
 import theme from "./Theme";
+import { useAuth } from "./useAuth";
 
 export default function SignIn() {
+  const loginService = async (username: string, password: string) => {
+    // TODO: send request to backend
+    return Promise.resolve({
+      data: {
+        token: `${username}-${password}`,
+      },
+    });
+  };
+
+  const { login } = useAuth();
+
+  const handleLogin = async (username: string, password: string) => {
+    try {
+      const response = await loginService(username, password);
+      const { token } = response.data;
+
+      login(token);
+    } catch (error) {
+      console.error("Login error", error);
+    }
+  };
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
-    });
+    const email = data.get("email");
+    const password = data.get("password");
+
+    if (typeof email === "string" && typeof password === "string") {
+      handleLogin(email, password);
+    } else {
+      console.error("Form data is not valid.");
+    }
   };
 
   return (
@@ -97,7 +124,7 @@ export default function SignIn() {
                 </Link>
               </Grid>
               <Grid item>
-                <Link href="signup" variant="body2">
+                <Link href="/signup" variant="body2">
                   {"Don't have an account? Sign Up"}
                 </Link>
               </Grid>
