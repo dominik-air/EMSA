@@ -40,4 +40,10 @@ describe("<SignIn />", () => {
       expect(mockLogin).toHaveBeenCalledWith("test@example.com-password123"),
     );
   });
+
+  it('contains a link to the signup page', () => {
+    render(<SignIn />);
+    const signUpLink = screen.getByText("Don't have an account? Sign Up");
+    expect(signUpLink.closest('a')).toHaveAttribute('href', '/signup');
+  });
 });
