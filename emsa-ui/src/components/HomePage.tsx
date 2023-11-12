@@ -3,6 +3,7 @@ import Button from "@mui/material/Button";
 import { Box, Container, CssBaseline, Typography } from "@mui/material";
 import theme from "./Theme";
 import { useAuth } from "./useAuth";
+import MemeGrid from "./MemeGrid";
 
 export default function HomePage() {
   const { logout } = useAuth();
@@ -10,6 +11,99 @@ export default function HomePage() {
   const handleLogout = () => {
     logout();
   };
+
+  const memes = [
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+    {
+      type: "image",
+      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+      tags: ["funny", "nerd"],
+    },
+  ];
 
   return (
     <ThemeProvider theme={theme}>
@@ -25,8 +119,9 @@ export default function HomePage() {
           }}
         >
           <Typography component="h1" variant="h5">
-            Hi!
+            Your Homepage
           </Typography>
+          <MemeGrid memes={memes} />
           <Button
             type="button"
             fullWidth
