@@ -12,9 +12,9 @@ COPY . /code
 # Install Flake8, isort, black, and pytest
 RUN pip install flake8 isort black pytest pytest-asyncio
 
-# Add the virtual environment to the PATH
-ENV PATH="/code/.venv/bin:${PATH}"
+# Install mypy specifically in the virtual environment
+RUN poetry run pip install mypy
 
 # Expose the port that FastAPI will run on
 EXPOSE 8000
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "export PATH=$PATH:/code/.venv/bin && uvicorn src.main:app --host 0.0.0.0 --port 8000"]
