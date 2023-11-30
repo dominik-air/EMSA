@@ -12,6 +12,8 @@ import {
   ListItemButton,
 } from "@mui/material";
 
+import { Checkbox, FormGroup, FormControlLabel } from "@mui/material";
+
 const MembersList: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
@@ -23,9 +25,16 @@ const MembersList: React.FC = () => {
     "member 5",
     "member 6",
   ];
+  const friends = ["friend 1", "friend 2", "friend 3", "friend 4"];
+
+  const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
 
   const handleAddNewMember = () => {
-    console.log(`Opening add new member pop up!`);
+    setAddMemberDialogOpen(true);
+  };
+
+  const handleCloseAddMemberDialog = () => {
+    setAddMemberDialogOpen(false);
   };
 
   const handleClickOpen = (member: string) => {
@@ -55,7 +64,7 @@ const MembersList: React.FC = () => {
             fullWidth
             onClick={() => handleAddNewMember()}
           >
-            Add member to group
+            Add friends to group
           </Button>
         </ListItem>
         {members.map((member, index) => (
@@ -79,6 +88,24 @@ const MembersList: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={addMemberDialogOpen} onClose={handleCloseAddMemberDialog}>
+        <DialogTitle>Add friend to group</DialogTitle>
+        <DialogContent>
+          <FormGroup>
+            {friends.map((friend, index) => (
+              <FormControlLabel
+                key={index}
+                control={<Checkbox />}
+                label={friend}
+              />
+            ))}
+          </FormGroup>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleCloseAddMemberDialog}>Cancel</Button>
+          <Button variant="contained" onClick={handleCloseAddMemberDialog}>Add</Button>
         </DialogActions>
       </Dialog>
     </>
