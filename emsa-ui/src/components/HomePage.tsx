@@ -4,15 +4,16 @@ import {
   Box,
   AppBar,
   Toolbar,
-  Typography,
   Drawer,
   Button,
+  Typography 
 } from "@mui/material";
 import useCustomTheme from "./Theme";
 import { useAuth } from "./useAuth";
 import GroupList from "./GroupList";
 import MembersList from "./MembersList";
 import ManageMemes from "./ManageMemes";
+import logo from "../assets/emsa-logo.png";
 
 export default function HomePage() {
   const { logout } = useAuth();
@@ -110,27 +111,36 @@ export default function HomePage() {
     },
     {
       type: "image",
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
+      url: "https://fwcdn.pl/ppo/50/13/55013/449913.2.jpg",
+      tags: ["funny", "Dominik"],
     },
   ];
 
   return (
     <ThemeProvider theme={useCustomTheme()}>
       <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
-      >
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            EMSA
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, height: 70 }}>
+  <Toolbar>
+    <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+    <img
+            src={logo}
+            alt="EMSA Logo"
+            style={{
+              width: "50px",
+              height: "50px",
+              borderRadius: "30%",
+              objectFit: "cover",
+            }}
+          />
+    </Box>
+    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Group name
           </Typography>
-          <Button color="inherit" onClick={() => handleLogout()}>
-            Logout
-          </Button>
-        </Toolbar>
-      </AppBar>
+    <Button color="inherit" onClick={() => handleLogout()}>
+      Logout
+    </Button>
+  </Toolbar>
+</AppBar>
       <Box sx={{ display: "flex" }}>
         <Drawer
           variant="permanent"
