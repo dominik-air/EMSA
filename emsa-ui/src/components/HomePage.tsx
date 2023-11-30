@@ -6,7 +6,7 @@ import {
   Toolbar,
   Drawer,
   Button,
-  Typography 
+  Typography,
 } from "@mui/material";
 import useCustomTheme from "./Theme";
 import { useAuth } from "./useAuth";
@@ -119,28 +119,31 @@ export default function HomePage() {
   return (
     <ThemeProvider theme={useCustomTheme()}>
       <CssBaseline />
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, height: 70 }}>
-  <Toolbar>
-    <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-    <img
-            src={logo}
-            alt="EMSA Logo"
-            style={{
-              width: "50px",
-              height: "50px",
-              borderRadius: "30%",
-              objectFit: "cover",
-            }}
-          />
-    </Box>
-    <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+      <AppBar
+        position="fixed"
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1, height: 70 }}
+      >
+        <Toolbar>
+          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+            <img
+              src={logo}
+              alt="EMSA Logo"
+              style={{
+                width: "70px",
+                height: "70px",
+                borderRadius: "30%",
+                objectFit: "cover",
+              }}
+            />
+          </Box>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Group name
           </Typography>
-    <Button color="inherit" onClick={() => handleLogout()}>
-      Logout
-    </Button>
-  </Toolbar>
-</AppBar>
+          <Button color="inherit" onClick={() => handleLogout()}>
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
       <Box sx={{ display: "flex" }}>
         <Drawer
           variant="permanent"

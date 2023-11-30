@@ -1,8 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Button, AppBar, Toolbar, InputBase } from "@mui/material";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MemeGrid from "./MemeGrid";
 import { styled, alpha } from "@mui/material/styles";
+import { useDropzone } from "react-dropzone";
 
 interface Meme {
   type: "image" | "link";
@@ -55,8 +63,38 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+interface FileWithPreview extends File {
+  preview: string;
+}
+
 const ManageMemes: React.FC<ManageMemesProps> = ({ memes }) => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
+
+  const onDrop = (acceptedFiles: File[]) => {
+    setFiles(
+      acceptedFiles.map((file) =>
+        Object.assign(file, {
+          preview: URL.createObjectURL(file),
+        }),
+      ),
+    );
+  };
+  const { getRootProps, getInputProps } = useDropzone({ onDrop });
+
+  useEffect(() => {
+    files.forEach((file) => URL.revokeObjectURL(file.preview));
+  }, [files]);
+
+  const handleDialogOpen = () => {
+    setIsDialogOpen(true);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setFiles([]);
+  };
 
   const filteredMemes = memes.filter((meme) =>
     meme.tags.some((tag) =>
@@ -78,12 +116,66 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ memes }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </Search>
-          <Button variant="contained" sx={{ ml: 2 }}>
+          <Button variant="contained" sx={{ ml: 2 }} onClick={handleDialogOpen}>
             Add New Meme
           </Button>
         </Toolbar>
       </AppBar>
       <MemeGrid memes={filteredMemes} />
+      <Dialog open={isDialogOpen} onClose={handleDialogClose}>
+        <DialogTitle>Add Meme</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="Name"
+            type="text"
+            fullWidth
+            variant="standard"
+          />
+          <TextField
+            margin="dense"
+            id="source"
+            label="Source"
+            type="text"
+            fullWidth
+            variant="standard"
+          />
+          <Box
+            {...getRootProps()}
+            sx={{
+              border: "1px dashed gray",
+              padding: "20px",
+              textAlign: "center",
+            }}
+          >
+            <input {...getInputProps()} />
+            <p>Drop your file here, or click to select files</p>
+            {files.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                {files.map((file) => (
+                  <div key={file.name}>
+                    <img
+                      src={file.preview}
+                      style={{ width: "100%" }}
+                      alt="Preview"
+                    />
+                  </div>
+                ))}
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleDialogClose}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleDialogClose}>
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
