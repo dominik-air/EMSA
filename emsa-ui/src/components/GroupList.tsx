@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
 } from "@mui/material";
 
 const GroupList: React.FC = () => {
@@ -29,58 +29,62 @@ const GroupList: React.FC = () => {
   };
   return (
     <>
-    <List sx={{ width: "100%", bgcolor: "background.paper" }}>
-      <ListItem>
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{ width: "100%", textAlign: "center" }}
-        >
-          My groups
-        </Typography>
-      </ListItem>
-      <ListItem>
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={() => handleAddNewGroup()}
-        >
-          Create new group
-        </Button>
-      </ListItem>
-      {groups.map((group, index) => (
-        <ListItem
-          key={index}
-          sx={{ justifyContent: "center", display: "flex" }}
-        >
-          <ListItemButton
-            sx={{ textAlign: "center", justifyContent: "center" }}
-            onClick={() => handleGroupClick(group)}
+      <List sx={{ width: "100%", bgcolor: "background.paper" }}>
+        <ListItem>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ width: "100%", textAlign: "center" }}
           >
-            {group}
-          </ListItemButton>
+            My groups
+          </Typography>
         </ListItem>
-      ))}
-    </List>
-     <Dialog open={open} onClose={handleClose}>
-     <DialogTitle>Create new group</DialogTitle>
-     <DialogContent>
-       <TextField
-         autoFocus
-         margin="dense"
-         id="group-name"
-         label="Group Name"
-         type="text"
-         fullWidth
-         variant="standard"
-       />
-     </DialogContent>
-     <DialogActions>
-       <Button variant="contained" onClick={handleClose}>Cancel</Button>
-       <Button variant="contained" onClick={handleClose}>Create</Button>
-     </DialogActions>
-   </Dialog>
-   </>
+        <ListItem>
+          <Button
+            variant="contained"
+            fullWidth
+            onClick={() => handleAddNewGroup()}
+          >
+            Create new group
+          </Button>
+        </ListItem>
+        {groups.map((group, index) => (
+          <ListItem
+            key={index}
+            sx={{ justifyContent: "center", display: "flex" }}
+          >
+            <ListItemButton
+              sx={{ textAlign: "center", justifyContent: "center" }}
+              onClick={() => handleGroupClick(group)}
+            >
+              {group}
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Create new group</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="group-name"
+            label="Group Name"
+            type="text"
+            fullWidth
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleClose}>
+            Create
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

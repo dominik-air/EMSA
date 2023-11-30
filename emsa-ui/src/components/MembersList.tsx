@@ -104,8 +104,12 @@ const MembersList: React.FC = () => {
           </FormGroup>
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={handleCloseAddMemberDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleCloseAddMemberDialog}>Add</Button>
+          <Button variant="contained" onClick={handleCloseAddMemberDialog}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleCloseAddMemberDialog}>
+            Add
+          </Button>
         </DialogActions>
       </Dialog>
     </>

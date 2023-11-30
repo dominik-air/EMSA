@@ -13,7 +13,7 @@ interface MemeGridProps {
 }
 
 const MemeGrid: React.FC<MemeGridProps> = ({ memes }) => {
-  const gridStyle = {
+  const gridStyle: React.CSSProperties = {
     maxHeight: "1000px",
     overflowY: "scroll",
     padding: "8px",
