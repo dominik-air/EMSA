@@ -11,7 +11,7 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { ThemeProvider } from "@mui/material/styles";
 import logo from "../assets/emsa-logo.png";
-import theme from "./Theme";
+import useCustomTheme from "./Theme";
 import { useAuth } from "./useAuth";
 
 export default function SignIn() {
@@ -51,7 +51,7 @@ export default function SignIn() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={useCustomTheme()}>
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box

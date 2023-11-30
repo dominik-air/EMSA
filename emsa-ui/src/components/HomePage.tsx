@@ -1,12 +1,22 @@
 import { ThemeProvider } from "@mui/material/styles";
-import Button from "@mui/material/Button";
-import { Box, Container, CssBaseline, Typography } from "@mui/material";
-import theme from "./Theme";
+import {
+  CssBaseline,
+  Box,
+  AppBar,
+  Toolbar,
+  Typography,
+  Drawer,
+  Button,
+} from "@mui/material";
+import useCustomTheme from "./Theme";
 import { useAuth } from "./useAuth";
-import MemeGrid from "./MemeGrid";
+import GroupList from "./GroupList";
+import MembersList from "./MembersList";
+import ManageMemes from "./ManageMemes";
 
 export default function HomePage() {
   const { logout } = useAuth();
+  const drawerWidth = 240;
 
   const handleLogout = () => {
     logout();
@@ -71,7 +81,7 @@ export default function HomePage() {
     {
       type: "image",
       url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
+      tags: ["funny", "Radek"],
     },
     {
       type: "image",
@@ -91,12 +101,12 @@ export default function HomePage() {
     {
       type: "image",
       url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
+      tags: ["funny", "Igor"],
     },
     {
       type: "image",
       url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
+      tags: ["funny", "Bartosz"],
     },
     {
       type: "image",
@@ -106,33 +116,58 @@ export default function HomePage() {
   ];
 
   return (
-    <ThemeProvider theme={theme}>
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100vh",
-          }}
-        >
-          <Typography component="h1" variant="h5">
-            Your Homepage
+    <ThemeProvider theme={useCustomTheme()}>
+      <CssBaseline />
+      <AppBar
+        position="fixed"
+        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      >
+        <Toolbar>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            EMSA
           </Typography>
-          <MemeGrid memes={memes} />
-          <Button
-            type="button"
-            fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-            onClick={handleLogout}
-          >
+          <Button color="inherit" onClick={() => handleLogout()}>
             Logout
           </Button>
+        </Toolbar>
+      </AppBar>
+      <Box sx={{ display: "flex" }}>
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            [`& .MuiDrawer-paper`]: {
+              width: drawerWidth,
+              boxSizing: "border-box",
+              bgcolor: "background.paper",
+            },
+          }}
+        >
+          <Toolbar />
+          <GroupList />
+        </Drawer>
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <Toolbar />
+          <ManageMemes memes={memes} />
         </Box>
-      </Container>
+        <Drawer
+          variant="permanent"
+          anchor="right"
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            [`& .MuiDrawer-paper`]: {
+              width: drawerWidth,
+              boxSizing: "border-box",
+              bgcolor: "background.paper",
+            },
+          }}
+        >
+          <Toolbar />
+          <MembersList />
+        </Drawer>
+      </Box>
     </ThemeProvider>
   );
 }

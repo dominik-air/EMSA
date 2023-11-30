@@ -1,13 +1,13 @@
+import React from "react";
+import { useMediaQuery } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import purple from "@mui/material/colors/purple";
 import orange from "@mui/material/colors/orange";
 import grey from "@mui/material/colors/grey";
 
-// TODO: a trained ui engineer should adjust those values
-// source: https://mui.com/material-ui/customization/color/
-
-const theme = createTheme({
+const lightTheme = createTheme({
   palette: {
+    mode: "light",
     primary: {
       main: purple[500],
       contrastText: grey[50],
@@ -33,4 +33,41 @@ const theme = createTheme({
   },
 });
 
-export default theme;
+const darkTheme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: {
+      main: purple[500],
+      contrastText: grey[200],
+    },
+    secondary: {
+      main: orange[500],
+      contrastText: grey[300],
+    },
+    background: {
+      default: grey[900],
+      paper: grey[800],
+    },
+    text: {
+      primary: grey[50],
+      secondary: grey[300],
+    },
+  },
+  typography: {
+    fontFamily: '"Comic Neue", cursive',
+    button: {
+      textTransform: "none",
+    },
+  },
+});
+
+const useCustomTheme = () => {
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
+
+  return React.useMemo(
+    () => createTheme(prefersDarkMode ? darkTheme : lightTheme),
+    [prefersDarkMode],
+  );
+};
+
+export default useCustomTheme;
