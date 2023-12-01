@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   List,
   ListItem,
@@ -11,10 +11,29 @@ import {
   DialogActions,
   TextField,
 } from "@mui/material";
+import axios from "axios";
 
 const GroupList: React.FC = () => {
   const [open, setOpen] = useState(false);
-  const groups = ["group 1", "group 2", "group 3", "group 4", "group 5"];
+  const [groups, setGroups] = useState<string[]>([]);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [email] = useState("email@example.com");
+
+  useEffect(() => {
+    fetchUserGroups();
+  });
+
+  const fetchUserGroups = () => {
+    axios
+      .get(`http://localhost:8000/user_groups/${email}`)
+      .then((response) => {
+        setGroups(response.data.groups);
+      })
+      .catch((error) => {
+        console.error(error);
+        setGroups(["no groups!"]);
+      });
+  };
 
   const handleAddNewGroup = () => {
     setOpen(true);
@@ -27,6 +46,22 @@ const GroupList: React.FC = () => {
   const handleGroupClick = (group: string) => {
     console.log(`Redirecting to the ${group}'s Homepage!`);
   };
+
+  const handleCreateGroup = () => {
+    axios
+      .post("http://localhost:8000/user_groups", {
+        email: email,
+        group_name: newGroupName,
+      })
+      .then((response) => {
+        setGroups(response.data.groups);
+        setOpen(false);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
   return (
     <>
       <List sx={{ width: "100%", bgcolor: "background.paper" }}>
@@ -40,27 +75,24 @@ const GroupList: React.FC = () => {
           </Typography>
         </ListItem>
         <ListItem>
-          <Button
-            variant="contained"
-            fullWidth
-            onClick={() => handleAddNewGroup()}
-          >
+          <Button variant="contained" fullWidth onClick={handleAddNewGroup}>
             Create new group
           </Button>
         </ListItem>
-        {groups.map((group, index) => (
-          <ListItem
-            key={index}
-            sx={{ justifyContent: "center", display: "flex" }}
-          >
-            <ListItemButton
-              sx={{ textAlign: "center", justifyContent: "center" }}
-              onClick={() => handleGroupClick(group)}
+        {groups &&
+          groups.map((group, index) => (
+            <ListItem
+              key={index}
+              sx={{ justifyContent: "center", display: "flex" }}
             >
-              {group}
-            </ListItemButton>
-          </ListItem>
-        ))}
+              <ListItemButton
+                sx={{ textAlign: "center", justifyContent: "center" }}
+                onClick={() => handleGroupClick(group)}
+              >
+                {group}
+              </ListItemButton>
+            </ListItem>
+          ))}
       </List>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Create new group</DialogTitle>
@@ -73,13 +105,15 @@ const GroupList: React.FC = () => {
             type="text"
             fullWidth
             variant="standard"
+            value={newGroupName}
+            onChange={(e) => setNewGroupName(e.target.value)}
           />
         </DialogContent>
         <DialogActions>
           <Button variant="contained" onClick={handleClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleClose}>
+          <Button variant="contained" onClick={handleCreateGroup}>
             Create
           </Button>
         </DialogActions>
