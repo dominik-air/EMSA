@@ -12,7 +12,7 @@ run start:
 logs:
 	docker-compose logs -f $(IMAGE_NAME)
 
-stop:
+stop down:
 	docker-compose down
 
 clean:

@@ -1,0 +1,6 @@
+psycopg*
+
+# IDE specific directories
+.idea/
+.vscode/
+
