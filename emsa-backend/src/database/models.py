@@ -1,14 +1,26 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
+from werkzeug.security import check_password_hash, generate_password_hash
 
 Base = declarative_base()
 
 
 class Logins(Base):
     __tablename__ = "logins"
-    user_mail = Column(String(100), primary_key=True)
+    user_mail = Column(String(100), primary_key=True, unique=True, index=True)
     password_hash = Column(String(255))
     user_name = Column(String(100))
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if self.password_hash is None:
+            return False
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f"<Logins(user_mail={self.user_mail}, user_name={self.user_name})>"
 
 
 class Media(Base):
