@@ -1,8 +1,3 @@
-FROM postgres
-
-COPY user.sql /docker-entrypoint-initdb.d/
-
-
 # Use the official Python image from the Docker Hub
 FROM python:3.12-slim
 
@@ -19,9 +14,6 @@ RUN pip install flake8 isort black pytest pytest-asyncio
 
 # Install mypy specifically in the virtual environment
 RUN poetry run pip install mypy
-
-# Install Postgres utilities
-RUN apt-get update && apt-get install -y postgresql-client
 
 # Expose the port that FastAPI will run on
 EXPOSE 8000
