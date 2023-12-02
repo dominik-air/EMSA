@@ -12,7 +12,7 @@ run start:
 logs:
 	docker-compose logs -f $(IMAGE_NAME)
 
-stop:
+stop down:
 	docker-compose down
 
 clean:
@@ -21,7 +21,7 @@ clean:
 lint:
 	docker-compose exec $(IMAGE_NAME) isort /src --color
 	docker-compose exec $(IMAGE_NAME) black /src --color
-	docker-compose exec $(IMAGE_NAME) flake8 /src
+	docker-compose exec $(IMAGE_NAME) flake8 /src 
 
 mypy:
 	docker-compose exec $(IMAGE_NAME) mypy /src

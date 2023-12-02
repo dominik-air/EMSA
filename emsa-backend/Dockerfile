@@ -5,16 +5,12 @@ WORKDIR /code
 
 # Copy the poetry files and install dependencies
 COPY pyproject.toml poetry.lock /code/
-RUN pip install poetry && poetry config virtualenvs.create false && poetry install --no-dev
+RUN pip install poetry && poetry config virtualenvs.create false && poetry install
 
 COPY . /code
 
-# Install Flake8, isort, black, and pytest
-RUN pip install flake8 isort black pytest pytest-asyncio
-
-# Install mypy specifically in the virtual environment
-RUN poetry run pip install mypy
-
 # Expose the port that FastAPI will run on
 EXPOSE 8000
+
+# Run the Python app
 CMD ["sh", "-c", "export PATH=$PATH:/code/.venv/bin && uvicorn src.main:app --host 0.0.0.0 --port 8000"]

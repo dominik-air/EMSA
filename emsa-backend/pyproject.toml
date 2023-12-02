@@ -13,18 +13,26 @@ authors = [
 python = "^3.12"
 fastapi = "^0.104.1"
 uvicorn = "^0.23.2"
+sqlalchemy = { version = "^1.4.50", extras = ["asyncio", "mypy"] }
+asyncpg = "^0.29"
+psycopg2-binary = "^2.9.9"
+databases = "^0.8.0"
+werkzeug =  "^3.0.1"
+pydantic = {version = "^2.5.2", extras = ["mypy"]}
+pydantic-settings = "^2.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.dev-dependencies]
-black = "^21.11"
-flake8 = "^4.0"
-isort = { version = "^5.10", extras = ["colors"] }
-mypy = "^1.0.1"
-pytest = "^7.2.1"
-pytest-asyncio = "^0.18.3"
+black = "^23.11"
+flake8 = "^6.1"
+flake8-pyproject="^1.2.3"
+isort = { version = "^5.12", extras = ["colors"] }
+mypy = "^1.7.1"
+pytest = "^7.4.3"
+pytest-asyncio = "^0.21.1"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -34,3 +42,9 @@ profile = "black"
 
 [tool.black]
 line-length = 120
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.mypy]
+plugins = ["sqlalchemy.ext.mypy.plugin", "pydantic.mypy"]

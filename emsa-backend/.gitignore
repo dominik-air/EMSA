@@ -60,3 +60,6 @@ htmlcov/
 
 # .mypy_cache, .pytest_cache, etc.
 .cache/
+
+# pgadmin4 volume
+pgadmin4-data/
