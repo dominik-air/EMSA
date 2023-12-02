@@ -7,7 +7,7 @@ Base = declarative_base()
 class Logins(Base):
     __tablename__ = "logins"
     user_mail = Column(String(100), primary_key=True)
-    password_hash = Column(String(100))
+    password_hash = Column(String(255))
     user_name = Column(String(100))
 
 
