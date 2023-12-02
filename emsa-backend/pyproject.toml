@@ -18,6 +18,8 @@ asyncpg = "^0.29"
 psycopg2-binary = "^2.9.9"
 databases = "^0.8.0"
 werkzeug =  "^3.0.1"
+pydantic = {version = "^2.5.2", extras = ["mypy"]}
+pydantic-settings = "^2.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -45,4 +47,4 @@ line-length = 120
 max-line-length = 120
 
 [tool.mypy]
-plugins = "sqlalchemy.ext.mypy.plugin"
+plugins = ["sqlalchemy.ext.mypy.plugin", "pydantic.mypy"]
