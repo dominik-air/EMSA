@@ -9,14 +9,13 @@ build:
 run start:
 	docker-compose up -d
 
-logs:
+rerun: stop build run
+
+logs log:
 	docker-compose logs -f $(IMAGE_NAME)
 
 stop down:
 	docker-compose down
-
-clean:
-	docker-compose down -v
 
 lint:
 	docker-compose exec $(IMAGE_NAME) isort /src --color

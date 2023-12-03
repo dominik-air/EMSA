@@ -1,15 +1,14 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
 from werkzeug.security import check_password_hash, generate_password_hash
 
-Base = declarative_base()
+from src.database.session import Base
 
 
-class Logins(Base):
-    __tablename__ = "logins"
-    user_mail = Column(String(100), primary_key=True, unique=True, index=True)
+class User(Base):
+    __tablename__ = "user"
+    mail = Column(String(100), primary_key=True, unique=True, index=True)
     password_hash = Column(String(255))
-    user_name = Column(String(100))
+    name = Column(String(100))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -20,7 +19,14 @@ class Logins(Base):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f"<Logins(user_mail={self.user_mail}, user_name={self.user_name})>"
+        return f"<User(user_mail={self.mail}, username={self.name})>"
+
+    def to_dict(self):
+        return {
+            "mail": self.mail,
+            "password_hash": self.password_hash,
+            "name": self.name,
+        }
 
 
 class Media(Base):
@@ -31,8 +37,8 @@ class Media(Base):
     link = Column(Text)
 
 
-class Groups(Base):
-    __tablename__ = "groups"
+class Group(Base):
+    __tablename__ = "group"
     group_id = Column(Integer, primary_key=True)
     group_name = Column(String(100))
 
@@ -40,20 +46,20 @@ class Groups(Base):
 class GroupsMapping(Base):
     __tablename__ = "groups_mapping"
     id = Column(Integer, primary_key=True)
-    group_id = Column(Integer, ForeignKey("groups.group_id"))
-    user_mail = Column(String(100), ForeignKey("logins.user_mail"))
+    group_id = Column(Integer, ForeignKey("group.group_id"))
+    mail = Column(String(100), ForeignKey("user.mail"))
 
 
 class FriendsMapping(Base):
     __tablename__ = "friends_mapping"
     id = Column(Integer, primary_key=True)
-    user_mail_1 = Column(String(100), ForeignKey("logins.user_mail"))
-    user_mail_2 = Column(String(100), ForeignKey("logins.user_mail"))
+    user_mail_1 = Column(String(100), ForeignKey("user.mail"))
+    user_mail_2 = Column(String(100), ForeignKey("user.mail"))
 
 
 class MediaMapping(Base):
     __tablename__ = "media_mapping"
     id = Column(Integer, primary_key=True)
     media_id = Column(Integer, ForeignKey("media.id"))
-    user_mail = Column(String(100), ForeignKey("logins.user_mail"))
-    group_id = Column(Integer, ForeignKey("groups.group_id"))
+    user_mail = Column(String(100), ForeignKey("user.mail"))
+    group_id = Column(Integer, ForeignKey("group.group_id"))
