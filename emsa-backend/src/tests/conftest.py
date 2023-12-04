@@ -11,16 +11,25 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import sessionmaker
 
-from src.database.schemas import PrivateUser
+from src.crud.group import GroupCRUD
+from src.crud.media import MediaCRUD
+from src.crud.user import UserCRUD
+from src.database.schemas import (
+    GroupCreate,
+    GroupGet,
+    MediaCreate,
+    MediaGet,
+    PrivateUser,
+)
 from src.database.session import Base
 from src.settings import settings
 
-USER_1 = PrivateUser(
-    **{"mail": "abc@gmail.com", "name": "Dominik", "password_hash": "321fdas532"}
-)
-USER_2 = PrivateUser(
-    **{"mail": "bzak@agh.pl", "name": "Bartosz", "password_hash": "emsa2137"}
-)
+USER_1 = PrivateUser(mail="abc@gmail.com", name="Dominik", password_hash="321fdas532")
+USER_2 = PrivateUser(mail="bzak@agh.pl", name="Bartosz", password_hash="emsa2137")
+GROUP_1 = GroupCreate(name="Group 1", owner_mail="abc@gmail.com")
+GROUP_2 = GroupCreate(name="Group 2", owner_mail="bzak@agh.pl")
+MEDIA_DATA_1 = {"is_image": True, "image_path": "komixxy.pl"}
+MEDIA_DATA_2 = {"is_image": False, "link": "tiktok.com/dominik-air"}
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -76,5 +85,36 @@ async def db_session(
     async_db_connection,
 ) -> AsyncGenerator[AsyncSession, None]:
     async for session in __session_within_transaction(async_db_connection):
-        # setup some data per function
         yield session
+
+
+@pytest_asyncio.fixture(scope="function")
+async def two_users(db_session: AsyncSession) -> list[PrivateUser]:
+    user_1 = await UserCRUD.create_user(USER_1, db_session)
+    user_2 = await UserCRUD.create_user(USER_2, db_session)
+    return [user_1, user_2]
+
+
+@pytest_asyncio.fixture(scope="function")
+async def two_groups(
+    db_session: AsyncSession, two_users: list[PrivateUser]
+) -> list[GroupGet]:
+    group_1 = await GroupCRUD.create_group(
+        GroupCreate(name=GROUP_1.name, owner_mail=two_users[0].mail), db_session
+    )
+    group_2 = await GroupCRUD.create_group(
+        GroupCreate(name=GROUP_2.name, owner_mail=two_users[0].mail), db_session
+    )
+    return [group_1, group_2]
+
+
+@pytest_asyncio.fixture(scope="function")
+async def two_media_on_groups(
+    db_session: AsyncSession,
+    two_groups: list[GroupGet],
+) -> list[MediaGet]:
+    media_1 = MediaCreate(**{"group_id": two_groups[0].id, **MEDIA_DATA_1})
+    media_2 = MediaCreate(**{"group_id": two_groups[1].id, **MEDIA_DATA_2})
+    media_1 = await MediaCRUD.create_media(media_1, db_session)
+    media_2 = await MediaCRUD.create_media(media_2, db_session)
+    return [media_1, media_2]

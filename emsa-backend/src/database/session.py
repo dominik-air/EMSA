@@ -23,5 +23,9 @@ async def get_db():
     db = async_session_global()
     try:
         yield db
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise
     finally:
         await db.close()
