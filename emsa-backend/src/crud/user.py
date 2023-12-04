@@ -1,8 +1,8 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import User
-from src.database.schemas import PrivateUser, PublicUser, UpdateUser
+from src.database.models import Friendship, User
+from src.database.schemas import FriendshipCreate, PrivateUser, PublicUser, UpdateUser
 
 
 class UserCRUD:
@@ -54,4 +54,45 @@ class UserCRUD:
     @staticmethod
     async def delete_user(mail: str, db: AsyncSession) -> None:
         query = delete(User).where(User.mail == mail)
+        await db.execute(query)
+
+    @staticmethod
+    async def check_if_friends(
+        user_mail: str, friend_mail: str, db: AsyncSession
+    ) -> bool:
+        query = select(Friendship).where(
+            Friendship.user_mail == user_mail, Friendship.friend_mail == friend_mail
+        )
+        result = await db.execute(query)
+        friendship = result.fetchone()
+
+        return friendship is not None
+
+    @staticmethod
+    async def add_friend(user_mail: str, friend_mail: str, db: AsyncSession) -> None:
+        await UserCRUD.get_user(user_mail, db)
+        await UserCRUD.get_user(friend_mail, db)
+
+        if await UserCRUD.check_if_friends(user_mail, friend_mail, db):
+            raise ValueError("Users are already friends")
+
+        user_friendship = FriendshipCreate(user_mail=user_mail, friend_mail=friend_mail)
+        friend_friendship = FriendshipCreate(
+            user_mail=friend_mail, friend_mail=user_mail
+        )
+
+        query = insert(Friendship).values(user_friendship.model_dump())
+        await db.execute(query)
+        query = insert(Friendship).values(friend_friendship.model_dump())
+        await db.execute(query)
+
+    @staticmethod
+    async def remove_friend(user_mail: str, friend_mail: str, db: AsyncSession) -> None:
+        query = delete(Friendship).where(
+            Friendship.user_mail == user_mail, Friendship.friend_mail == friend_mail
+        )
+        await db.execute(query)
+        query = delete(Friendship).where(
+            Friendship.user_mail == friend_mail, Friendship.friend_mail == user_mail
+        )
         await db.execute(query)

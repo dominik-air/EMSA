@@ -3,8 +3,8 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import UserCRUD
-from src.database.models import User
-from src.database.schemas import PublicUser, UpdateUser
+from src.database.models import Friendship, User
+from src.database.schemas import PrivateUser, PublicUser, UpdateUser
 from src.tests.conftest import USER_1, USER_2
 
 
@@ -70,3 +70,48 @@ async def test_user_delete(db_session: AsyncSession):
     after_creation_count = len(after_creation_select.fetchall())
 
     assert after_creation_count == before_creation_count - 1
+
+
+@pytest.mark.asyncio
+async def test_user_add_friend(db_session: AsyncSession, two_users: list[PrivateUser]):
+    user_1, user_2 = two_users
+    await UserCRUD.add_friend(user_1.mail, user_2.mail, db_session)
+
+    query = select(Friendship).where(
+        Friendship.user_mail == user_1.mail, Friendship.friend_mail == user_2.mail
+    )
+    result = await db_session.execute(query)
+    friendship_1 = result.fetchone()
+
+    query = select(Friendship).where(
+        Friendship.user_mail == user_2.mail, Friendship.friend_mail == user_1.mail
+    )
+    result = await db_session.execute(query)
+    friendship_2 = result.fetchone()
+
+    assert friendship_1
+    assert friendship_2
+
+
+@pytest.mark.asyncio
+async def test_user_remove_friend(
+    db_session: AsyncSession, two_users: list[PrivateUser]
+):
+    user_1, user_2 = two_users
+    await UserCRUD.add_friend(user_1.mail, user_2.mail, db_session)
+    await UserCRUD.remove_friend(user_1.mail, user_2.mail, db_session)
+
+    query = select(Friendship).where(
+        Friendship.user_mail == user_1.mail, Friendship.friend_mail == user_2.mail
+    )
+    result = await db_session.execute(query)
+    friendship_1 = result.fetchone()
+
+    query = select(Friendship).where(
+        Friendship.user_mail == user_2.mail, Friendship.friend_mail == user_1.mail
+    )
+    result = await db_session.execute(query)
+    friendship_2 = result.fetchone()
+
+    assert friendship_1 is None
+    assert friendship_2 is None

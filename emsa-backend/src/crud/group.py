@@ -2,8 +2,8 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Group
-from src.database.schemas import GroupCreate, GroupGet, GroupUpdate
+from src.database.models import Group, User, user_group_association
+from src.database.schemas import GroupCreate, GroupGet, GroupUpdate, PublicUser
 
 
 class GroupCRUD:
@@ -64,3 +64,26 @@ class GroupCRUD:
     async def delete_group(group_id: int, db: AsyncSession) -> None:
         query = delete(Group).where(Group.id == group_id)
         await db.execute(query)
+
+    @staticmethod
+    async def add_users_to_group(
+        group_id: int,
+        user_mails: list[str],
+        db: AsyncSession,
+    ) -> None:
+        for user_mail in user_mails:
+            query = insert(user_group_association).values(
+                user_mail=user_mail, group_id=group_id
+            )
+            await db.execute(query)
+
+    @staticmethod
+    async def get_users_in_group(group_id: int, db: AsyncSession) -> list[PublicUser]:
+        query = (
+            select(User)
+            .join(user_group_association)
+            .where(user_group_association.c.group_id == group_id)
+        )
+        result = await db.execute(query)
+        users_data = result.fetchall()
+        return [PublicUser(**user[0].to_dict()) for user in users_data]

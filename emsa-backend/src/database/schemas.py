@@ -15,6 +15,11 @@ class UpdateUser(BaseModel):
     password_hash: str | None = None
 
 
+class FriendshipCreate(BaseModel):
+    user_mail: str
+    friend_mail: str
+
+
 class MediaCreate(BaseModel):
     group_id: int
     is_image: bool

@@ -7,7 +7,7 @@ from src.database.session import Base
 user_group_association = Table(
     "user_group_association",
     Base.metadata,
-    Column("user_id", String, ForeignKey("users.mail")),
+    Column("user_mail", String, ForeignKey("users.mail")),
     Column("group_id", Integer, ForeignKey("groups.id")),
 )
 
@@ -15,20 +15,19 @@ user_group_association = Table(
 class User(Base):
     __tablename__ = "users"
 
-    mail: str = Column(String(100), primary_key=True, unique=True, index=True)
+    mail: str = Column(String(64), primary_key=True, unique=True, index=True)
     password_hash: str = Column(String(255), nullable=False)
-    name: str = Column(String(100), nullable=False, default=mail)
+    name: str = Column(String(64), nullable=False, default=mail)
 
-    # Define a many-to-many relationship with the User model
+    # many-to-many relationship with the User
     friendships: list["Friendship"] = relationship(
         "Friendship", back_populates="users", foreign_keys="Friendship.friend_mail"
     )
-
-    # Define a many-to-many relationship with the Group model
+    # many-to-many relationship with the Group
     groups: list["Group"] = relationship(
         "Group", secondary=user_group_association, back_populates="users"
     )
-    # one-to-many
+    # one-to-many relationship with the Group
     owned_groups: list["Group"] = relationship(
         "Group", back_populates="owner", uselist=True
     )
@@ -59,11 +58,11 @@ class Friendship(Base):
     friend_mail: str = Column(String, ForeignKey("users.mail"))
     user_mail: str = Column(String, ForeignKey("users.mail"))
 
-    # Define the many-to-one relationship with the User model
-    users: User | None = relationship(
+    # many-to-one relationship with the User
+    users: User = relationship(
         "User", back_populates="friendships", foreign_keys=[user_mail]
     )
-    friend: User | None = relationship(
+    friend: User = relationship(
         "User", back_populates="friendships", foreign_keys=[friend_mail]
     )
 
@@ -72,16 +71,15 @@ class Group(Base):
     __tablename__ = "groups"
 
     id: int = Column(Integer, primary_key=True)
-    name: str = Column(String(100), nullable=False)
+    name: str = Column(String(64), nullable=False)
     owner_mail: str = Column(String, ForeignKey("users.mail"), nullable=False)
-    owner: User | None = relationship("User", back_populates="owned_groups")
+    owner: User = relationship("User", back_populates="owned_groups")
 
-    # Define a many-to-many relationship with the User model
+    # many-to-many relationship with the User
     users: list["User"] = relationship(
         "User", secondary=user_group_association, back_populates="groups"
     )
-
-    # Define a one-to-many relationship with the Media model
+    # one-to-many relationship with the Media
     media: list["Media"] = relationship("Media", back_populates="group")
 
     def to_dict(self) -> dict:
@@ -101,8 +99,8 @@ class Media(Base):
     image_path: str = Column(String)
     link: str = Column(String)
 
-    # Define a many-to-one relationship with the Group model
-    group: Group | None = relationship("Group", back_populates="media")
+    # many-to-one relationship with the Group
+    group: Group = relationship("Group", back_populates="media")
 
     def to_dict(self) -> dict:
         return {
