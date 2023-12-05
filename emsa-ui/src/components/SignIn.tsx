@@ -1,25 +1,33 @@
-import * as React from "react";
+import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
 import Link from "@mui/material/Link";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { ThemeProvider } from "@mui/material/styles";
+import axios from "axios";
 import logo from "../assets/emsa-logo.png";
 import useCustomTheme from "./Theme";
 import { useAuth } from "./useAuth";
 
 export default function SignIn() {
+  const [loginError, setLoginError] = useState("");
+
   const loginService = async (username: string, password: string) => {
-    // TODO: send request to backend
-    return Promise.resolve({
-      data: {
-        token: `${username}-${password}`,
-      },
-    });
+    try {
+      const response = await axios.post("http://localhost:8000/login", {
+        username,
+        password,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error during login service", error);
+      throw error;
+    }
   };
 
   const { login } = useAuth();
@@ -27,11 +35,13 @@ export default function SignIn() {
   const handleLogin = async (username: string, password: string) => {
     try {
       const response = await loginService(username, password);
-      const { token } = response.data;
+      const { token } = response;
 
       login(token);
+      setLoginError("");
     } catch (error) {
       console.error("Login error", error);
+      setLoginError("Invalid credentials. Please try again.");
     }
   };
 
@@ -61,7 +71,6 @@ export default function SignIn() {
             height: "100vh",
           }}
         >
-          {/* Logo */}
           <img
             src={logo}
             alt="EMSA Logo"
@@ -77,6 +86,9 @@ export default function SignIn() {
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
+
+          {loginError && <Alert severity="error">{loginError}</Alert>}
+
           <Box
             component="form"
             onSubmit={handleSubmit}

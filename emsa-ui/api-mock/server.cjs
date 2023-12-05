@@ -8,7 +8,7 @@ const port = 8000;
 app.use(bodyParser.json());
 app.use(cors());
 
-const userGroups = [
+let userGroups = [
   {
     email: 'email@example.com',
     groups: ['kociaki', 'bigos', 'baseniarze'],
@@ -40,6 +40,42 @@ app.post('/user_groups', (req, res) => {
   }
 });
 
+let users = [{
+  username: 'demoUser',
+  password: 'password123'
+}];
+
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  users.forEach(u => {
+    if (username === u.username && password === u.password) {
+      res.json({ token: 'some-auth-token' }); 
+      return
+    }
+  });
+
+  res.status(401).json({ error: 'Invalid credentials' });
+
+});
+
+app.post('/signup', (req, res) => {
+  const { nickname, email, password } = req.body;
+
+  if (!nickname || !email || !password) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  const newUser = {
+    id: users.length + 1,
+    email,
+    password: password
+  };
+
+  users.push(newUser);
+
+  res.status(201).json({ message: 'User registered successfully', user: newUser });
+});
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
