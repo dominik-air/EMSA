@@ -1,8 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class PublicUser(BaseModel):
-    mail: str
+    mail: EmailStr
     name: str = ""
 
 
@@ -16,8 +16,8 @@ class UpdateUser(BaseModel):
 
 
 class FriendshipCreate(BaseModel):
-    user_mail: str
-    friend_mail: str
+    user_mail: EmailStr
+    friend_mail: EmailStr
 
 
 class MediaCreate(BaseModel):
@@ -39,7 +39,7 @@ class MediaUpdate(BaseModel):
 
 class GroupCreate(BaseModel):
     name: str
-    owner_mail: str
+    owner_mail: EmailStr
 
 
 class GroupGet(GroupCreate):
@@ -48,4 +48,4 @@ class GroupGet(GroupCreate):
 
 class GroupUpdate(BaseModel):
     name: str | None = None
-    owner_mail: str | None = None
+    owner_mail: EmailStr | None = None
