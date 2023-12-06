@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "EMSA"
 version = "0.1.0"
-description = "FastAPI backend for web application"
+description = "FastAPI backend for EMSA"
 authors = [
   "Radosław Szpot",
   "Igor Ratajczyk",
@@ -10,16 +10,15 @@ authors = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.12"
-fastapi = "^0.104.1"
-uvicorn = "^0.23.2"
-sqlalchemy = { version = "^1.4.50", extras = ["asyncio", "mypy"] }
 asyncpg = "^0.29"
+fastapi = "^0.104.1"
+python = "^3.12"
 psycopg2-binary = "^2.9.9"
-databases = "^0.8.0"
-werkzeug =  "^3.0.1"
-pydantic = {version = "^2.5.2", extras = ["mypy"]}
+pydantic = {version = "^2.5.2", extras = ["mypy", "email"]}
 pydantic-settings = "^2.1.0"
+sqlalchemy = { version = "^1.4.50", extras = ["asyncio", "mypy"] }
+uvicorn = "^0.23.2"
+werkzeug =  "^3.0.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

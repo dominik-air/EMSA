@@ -3,6 +3,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    ENV: str = Field(..., validation_alias="ENV")
+
     POSTGRES_USER: str = Field(..., validation_alias="POSTGRES_USER")
     POSTGRES_PASSWORD: str = Field(..., validation_alias="POSTGRES_PASSWORD")
     POSTGRES_HOST: str = Field(..., validation_alias="POSTGRES_HOST")
