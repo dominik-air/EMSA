@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { Box, Button, AppBar, Toolbar, InputBase } from "@mui/material";
 import {
   Dialog,
@@ -18,8 +19,8 @@ interface Meme {
   tags: string[];
 }
 
-interface ManageMemesProps {
-  memes: Meme[];
+interface FileWithPreview extends File {
+  preview: string;
 }
 
 const Search = styled("div")(({ theme }) => ({
@@ -63,14 +64,30 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-interface FileWithPreview extends File {
-  preview: string;
-}
-
-const ManageMemes: React.FC<ManageMemesProps> = ({ memes }) => {
+const ManageMemes = () => {
+  const [memes, setMemes] = useState<Meme[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+
+  useEffect(() => {
+    const fetchMemes = async () => {
+      try {
+        const response = await axios.get<Meme[]>(
+          `http://localhost:8000/memes/?searchTerm=${encodeURIComponent(
+            searchTerm,
+          )}`,
+        );
+        setMemes(response.data);
+      } catch (error) {
+        console.error("Error fetching memes:", error);
+      }
+    };
+
+    if (searchTerm) {
+      fetchMemes();
+    }
+  }, [searchTerm]);
 
   const onDrop = (acceptedFiles: File[]) => {
     setFiles(
@@ -96,12 +113,6 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ memes }) => {
     setFiles([]);
   };
 
-  const filteredMemes = memes.filter((meme) =>
-    meme.tags.some((tag) =>
-      tag.toLowerCase().includes(searchTerm.toLowerCase()),
-    ),
-  );
-
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static" color="default">
@@ -113,6 +124,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ memes }) => {
             <StyledInputBase
               placeholder="Search Memes"
               inputProps={{ "aria-label": "search" }}
+              value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </Search>
@@ -121,7 +133,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ memes }) => {
           </Button>
         </Toolbar>
       </AppBar>
-      <MemeGrid memes={filteredMemes} />
+      <MemeGrid memes={memes} />
       <Dialog open={isDialogOpen} onClose={handleDialogClose}>
         <DialogTitle>Add Meme</DialogTitle>
         <DialogContent>

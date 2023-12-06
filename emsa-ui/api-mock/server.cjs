@@ -109,6 +109,111 @@ app.get('/members/:group', (req, res) => {
   }
 });
 
+const memes = [
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "Radek"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "nerd"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "Igor"],
+  },
+  {
+    type: "image",
+    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
+    tags: ["funny", "Bartosz"],
+  },
+  {
+    type: "image",
+    url: "https://fwcdn.pl/ppo/50/13/55013/449913.2.jpg",
+    tags: ["funny", "Dominik"],
+  },
+];
+
+app.get('/memes', (req, res) => {
+  const searchTerm = req.query.searchTerm;
+  if (searchTerm) {
+    const filteredMemes = memes.filter(meme => 
+      meme.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+    res.json(filteredMemes);
+  } else {
+    res.json(memes);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });

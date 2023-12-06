@@ -36,19 +36,22 @@ const MembersList: React.FC = () => {
 
   useEffect(() => {
     const fetchMembers = async () => {
-      const response = await axios.get<Member[]>(`http://localhost:8000/members/${currentGroup}`);
+      const response = await axios.get<Member[]>(
+        `http://localhost:8000/members/${currentGroup}`,
+      );
       setMembers(response.data);
     };
 
     const fetchFriends = async () => {
-      const response = await axios.get<Friend[]>(`http://localhost:8000/friends/${userEmail}`);
+      const response = await axios.get<Friend[]>(
+        `http://localhost:8000/friends/${userEmail}`,
+      );
       setFriends(response.data);
     };
 
     fetchMembers();
     fetchFriends();
   }, []);
-
 
   const handleAddNewMember = () => {
     setAddMemberDialogOpen(true);

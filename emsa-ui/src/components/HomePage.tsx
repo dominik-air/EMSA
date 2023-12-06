@@ -22,100 +22,6 @@ export default function HomePage() {
   const handleLogout = () => {
     logout();
   };
-
-  const memes = [
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "Radek"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "nerd"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "Igor"],
-    },
-    {
-      type: "image" as const,
-      url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-      tags: ["funny", "Bartosz"],
-    },
-    {
-      type: "image" as const,
-      url: "https://fwcdn.pl/ppo/50/13/55013/449913.2.jpg",
-      tags: ["funny", "Dominik"],
-    },
-  ];
-
   return (
     <ThemeProvider theme={useCustomTheme()}>
       <CssBaseline />
@@ -162,7 +68,7 @@ export default function HomePage() {
         </Drawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <Toolbar />
-          <ManageMemes memes={memes} />
+          <ManageMemes />
         </Box>
         <Drawer
           variant="permanent"
