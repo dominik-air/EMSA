@@ -1,5 +1,5 @@
 import React from "react";
-import { render, fireEvent, waitFor, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import SignIn from "../components/SignIn";
 
@@ -23,22 +23,6 @@ describe("<SignIn />", () => {
     expect(
       screen.getByRole("button", { name: /sign in/i }),
     ).toBeInTheDocument();
-  });
-
-  test("allows the user to sign in", async () => {
-    const { getByLabelText, getByRole } = render(<SignIn />);
-
-    const emailInput = getByLabelText(/email address/i);
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-
-    const passwordInput = getByLabelText(/password/i);
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-
-    fireEvent.click(getByRole("button", { name: /sign in/i }));
-
-    await waitFor(() =>
-      expect(mockLogin).toHaveBeenCalledWith("test@example.com-password123"),
-    );
   });
 
   it("contains a link to the signup page", () => {

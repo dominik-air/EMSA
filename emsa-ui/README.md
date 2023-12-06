@@ -29,3 +29,11 @@
 ### Formatting
 
 `npm run format`
+
+### Unit tests
+
+`npm run test`
+
+### Mocking the backend's API
+
+`node api-mock/server.cjs`

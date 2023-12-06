@@ -1,4 +1,6 @@
-import * as React from "react";
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
@@ -7,23 +9,44 @@ import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
+import Alert from "@mui/material/Alert";
 import { ThemeProvider } from "@mui/material/styles";
 import logo from "../assets/emsa-logo.png";
-import theme from "./Theme";
+import useCustomTheme from "./Theme";
 
 export default function SignUp() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [signupError, setSignupError] = useState("");
+
+  const HandleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const navigate = useNavigate();
     const data = new FormData(event.currentTarget);
-    console.log({
+
+    const signUpData = {
       nickname: data.get("nickname"),
       email: data.get("email"),
       password: data.get("password"),
-    });
+    };
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/signup",
+        signUpData,
+      );
+      console.log(response);
+      if (response.status === 201) {
+        setSignupSuccess(true);
+        setTimeout(() => navigate("/signin"), 3000);
+      }
+    } catch (error) {
+      console.error("Error during sign up", error);
+      setSignupError("Failed to sign up. Please try again.");
+    }
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={useCustomTheme()}>
       <Container component="main" maxWidth="xs">
         <CssBaseline />
         <Box
@@ -50,10 +73,18 @@ export default function SignUp() {
           <Typography component="h1" variant="h5">
             Sign up
           </Typography>
+
+          {signupSuccess && (
+            <Alert severity="success">
+              Signup successful! Redirecting to login...
+            </Alert>
+          )}
+          {signupError && <Alert severity="error">{signupError}</Alert>}
+
           <Box
             component="form"
             noValidate
-            onSubmit={handleSubmit}
+            onSubmit={HandleSubmit}
             sx={{ mt: 3 }}
           >
             <Grid container spacing={2}>
