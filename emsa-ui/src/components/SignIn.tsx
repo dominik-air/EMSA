@@ -15,11 +15,12 @@ import useCustomTheme from "./Theme";
 import { useAuth } from "./useAuth";
 
 export default function SignIn() {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [loginError, setLoginError] = useState("");
 
   const loginService = async (username: string, password: string) => {
     try {
-      const response = await axios.post("http://localhost:8000/login", {
+      const response = await axios.post(`${API_URL}/login`, {
         username,
         password,
       });

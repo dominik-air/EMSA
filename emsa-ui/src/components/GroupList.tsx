@@ -14,6 +14,7 @@ import {
 import axios from "axios";
 
 const GroupList: React.FC = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
   const [groups, setGroups] = useState<string[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
@@ -25,7 +26,7 @@ const GroupList: React.FC = () => {
 
   const fetchUserGroups = () => {
     axios
-      .get(`http://localhost:8000/user_groups/${email}`)
+      .get(`${API_URL}/user_groups/${email}`)
       .then((response) => {
         setGroups(response.data.groups);
       })
@@ -49,7 +50,7 @@ const GroupList: React.FC = () => {
 
   const handleCreateGroup = () => {
     axios
-      .post("http://localhost:8000/user_groups", {
+      .post(`${API_URL}/user_groups`, {
         email: email,
         group_name: newGroupName,
       })
