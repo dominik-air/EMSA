@@ -15,7 +15,7 @@ user_group_association = Table(
 class User(Base):
     __tablename__ = "users"
 
-    mail: str = Column(String(64), primary_key=True, unique=True, index=True)
+    mail: str = Column(String(64), primary_key=True, index=True)
     password_hash: str = Column(String(255), nullable=False)
     name: str = Column(String(64), nullable=False, default=mail)
 
@@ -90,6 +90,14 @@ class Group(Base):
         }
 
 
+media_tags_association = Table(
+    "media_tags_association",
+    Base.metadata,
+    Column("media_id", Integer, ForeignKey("media.id"), primary_key=True),
+    Column("tag_name", String, ForeignKey("tags.name"), primary_key=True),
+)
+
+
 class Media(Base):
     __tablename__ = "media"
 
@@ -102,6 +110,21 @@ class Media(Base):
     # many-to-one relationship with the Group
     group: Group = relationship("Group", back_populates="media")
 
+    # many-to-many relationship with Tags
+    tags: list["Tag"] = relationship(
+        "Tag", secondary=media_tags_association, back_populates="media"
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<Media("
+            f"id={self.id}, "
+            f"group_id={self.group_id}, "
+            f"is_image={self.is_image}, "
+            f"image_path={self.image_path}, "
+            f"link={self.link})>"
+        )
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -109,4 +132,22 @@ class Media(Base):
             "is_image": self.is_image,
             "image_path": self.image_path,
             "link": self.link,
+        }
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+    name: str = Column(String(64), primary_key=True)
+
+    # many-to-many relationship with Media
+    media: list["Media"] = relationship(
+        "Media", secondary=media_tags_association, back_populates="tags"
+    )
+
+    def __repr__(self) -> str:
+        return f"<Tag(name={self.name})>"
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
         }

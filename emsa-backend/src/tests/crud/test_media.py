@@ -2,10 +2,10 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.media import MediaCRUD
+from src.crud.media import MediaCRUD, TagCRUD
 from src.database.models import Media
 from src.database.schemas import MediaCreate, MediaGet, MediaUpdate
-from src.tests.conftest import MEDIA_DATA_1
+from src.tests.conftest import MEDIA_DATA_1, TAGS
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,7 @@ async def test_media_list(
 
     assert len(media_list) == 2
     for i, media in enumerate(media_list):
-        assert media.model_dump() == two_media_on_groups[i].model_dump()
+        assert media.model_dump() == two_media_on_groups[i].model_dump(exclude={"tags"})
 
 
 @pytest.mark.asyncio
@@ -75,3 +75,13 @@ async def test_media_delete(
     after_deletion_count = len(after_deletion_select.fetchall())
 
     assert after_deletion_count == before_deletion_count - 1
+
+
+@pytest.mark.asyncio
+async def test_get_related_tags(db_session: AsyncSession, two_groups):
+    media_create = MediaCreate(**{"group_id": two_groups[0].id, **MEDIA_DATA_1})
+    media = await MediaCRUD.create_media(media_create, db_session, TAGS)
+
+    related_media = await TagCRUD.get_related_media(TAGS[0].name, db_session)
+
+    assert media.model_dump(exclude={"tags"}) == related_media[0].model_dump()
