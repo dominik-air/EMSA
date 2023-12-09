@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     POSTGRES_PORT: int = Field(..., validation_alias="POSTGRES_PORT")
     POSTGRES_DB: str = Field(..., validation_alias="POSTGRES_DB")
 
+    GCP_SERVICE_ACCOUNT_FILEPATH: str = Field(
+        ..., validation_alias="GCP_SERVICE_ACCOUNT_FILEPATH"
+    )
+
     @property
     def DATABASE_URL(self) -> str:
         return (
