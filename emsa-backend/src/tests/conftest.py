@@ -20,6 +20,7 @@ from src.database.schemas import (
     MediaCreate,
     MediaGet,
     PrivateUser,
+    TagCreate,
 )
 from src.database.session import Base
 from src.settings import settings
@@ -30,6 +31,7 @@ GROUP_1 = GroupCreate(name="Group 1", owner_mail="abc@gmail.com")
 GROUP_2 = GroupCreate(name="Group 2", owner_mail="bzak@agh.pl")
 MEDIA_DATA_1 = {"is_image": True, "image_path": "komixxy.pl"}
 MEDIA_DATA_2 = {"is_image": False, "link": "tiktok.com/dominik-air"}
+TAGS = [TagCreate(name="Bike"), TagCreate(name="FUNNY"), TagCreate(name="fall")]
 
 
 @pytest_asyncio.fixture(scope="session")
