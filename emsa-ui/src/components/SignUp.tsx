@@ -15,6 +15,7 @@ import logo from "../assets/emsa-logo.png";
 import useCustomTheme from "./Theme";
 
 export default function SignUp() {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [signupError, setSignupError] = useState("");
 
@@ -30,11 +31,7 @@ export default function SignUp() {
     };
 
     try {
-      const response = await axios.post(
-        "http://localhost:8000/signup",
-        signUpData,
-      );
-      console.log(response);
+      const response = await axios.post(`${API_URL}/signup`, signUpData);
       if (response.status === 201) {
         setSignupSuccess(true);
         setTimeout(() => navigate("/signin"), 3000);

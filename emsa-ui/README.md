@@ -37,3 +37,12 @@
 ### Mocking the backend's API
 
 `node api-mock/server.cjs`
+
+## Deployment guide
+
+### Building the image
+
+Replace the API_URL's value with the backend's URL.
+
+`docker build --build-arg API_URL=http://localhost:8000 -t emsa-ui:latest .`
+

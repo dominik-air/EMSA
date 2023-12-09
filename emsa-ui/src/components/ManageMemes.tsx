@@ -65,6 +65,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 const ManageMemes = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [memes, setMemes] = useState<Meme[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -74,9 +75,7 @@ const ManageMemes = () => {
     const fetchMemes = async () => {
       try {
         const response = await axios.get<Meme[]>(
-          `http://localhost:8000/memes/?searchTerm=${encodeURIComponent(
-            searchTerm,
-          )}`,
+          `${API_URL}/memes/?searchTerm=${encodeURIComponent(searchTerm)}`,
         );
         setMemes(response.data);
       } catch (error) {
@@ -87,7 +86,7 @@ const ManageMemes = () => {
     if (searchTerm) {
       fetchMemes();
     }
-  }, [searchTerm]);
+  }, [searchTerm, API_URL]);
 
   const onDrop = (acceptedFiles: File[]) => {
     setFiles(

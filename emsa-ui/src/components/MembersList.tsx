@@ -25,6 +25,7 @@ interface Friend {
 }
 
 const MembersList: React.FC = () => {
+  const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
@@ -37,21 +38,21 @@ const MembersList: React.FC = () => {
   useEffect(() => {
     const fetchMembers = async () => {
       const response = await axios.get<Member[]>(
-        `http://localhost:8000/members/${currentGroup}`,
+        `${API_URL}/members/${currentGroup}`,
       );
       setMembers(response.data);
     };
 
     const fetchFriends = async () => {
       const response = await axios.get<Friend[]>(
-        `http://localhost:8000/friends/${userEmail}`,
+        `${API_URL}/friends/${userEmail}`,
       );
       setFriends(response.data);
     };
 
     fetchMembers();
     fetchFriends();
-  }, []);
+  }, [API_URL]);
 
   const handleAddNewMember = () => {
     setAddMemberDialogOpen(true);
