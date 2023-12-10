@@ -18,10 +18,7 @@ class CloudStorage:
         self.bucket_name = "emsa-content"
         self.credentials = service_account.Credentials.from_service_account_file(
             settings.GCP_SERVICE_ACCOUNT_FILEPATH,
-            scopes=(
-                "https://www.googleapis.com/auth/cloud-platform",
-                "https://www.googleapis.com/auth/devstorage.read_write",
-            ),
+            scopes=("https://www.googleapis.com/auth/devstorage.read_write",),
         )
         self.credentials.refresh(Request())
 
@@ -31,8 +28,10 @@ class CloudStorage:
             "Authorization": f"Bearer {self.credentials.token}",
             "Content-Type": "image",
         }
-        upload_url = f"https://storage.googleapis.com/upload/storage/v1/b/{self.bucket_name}/\
-        o?uploadType=media&name={group_name}/{image_id}"
+        upload_url = (
+            f"https://storage.googleapis.com/upload/storage/v1/b/{self.bucket_name}/o"
+            f"?uploadType=media&name={group_name}/{image_id}"
+        )
 
         async with aiohttp.ClientSession() as session:
             async with session.post(

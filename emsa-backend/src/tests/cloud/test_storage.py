@@ -78,3 +78,19 @@ async def test_delete_image_failure():
 
         with pytest.raises(FailedToDeleteImageException):
             await cloud_storage.delete_image("test_id", "test_group")
+
+
+def live_creds_in_env() -> bool:
+    try:
+        CloudStorage()
+    except Exception:
+        return False
+    return True
+
+
+@pytest.mark.asyncio
+@pytest.mark.skipif(not live_creds_in_env(), reason="GCP credentials are not present")
+async def test_live_image_upload():
+    cloud_storage = CloudStorage()
+    await cloud_storage.upload_image("test_id", b"image_data", "test_group")
+    await cloud_storage.delete_image("test_id", "test_group")
