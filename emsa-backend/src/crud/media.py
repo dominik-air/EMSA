@@ -1,6 +1,7 @@
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.crud.group import GroupCRUD
 from src.crud.tag import TagCRUD
 from src.database.models import Media, Tag
 from src.database.schemas import (
@@ -89,3 +90,11 @@ class MediaCRUD:
         result = await db.execute(query)
         tags = result.fetchall()
         return [TagGet(**tag[0].to_dict()) for tag in tags]
+
+    @staticmethod
+    async def get_media_by_group(group_id: int, db: AsyncSession) -> list[MediaList]:
+        await GroupCRUD.get_group(group_id, db)
+        query = select(Media).where(Media.group_id == group_id)
+        result = await db.execute(query)
+        media_data = result.fetchall()
+        return [MediaList(**media[0].to_dict()) for media in media_data]

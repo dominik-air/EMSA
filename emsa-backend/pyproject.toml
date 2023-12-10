@@ -12,7 +12,6 @@ authors = [
 [tool.poetry.dependencies]
 asyncpg = "^0.29"
 fastapi = "^0.104.1"
-fastapi-async-sqlalchemy = "^0.6.0"
 httpx = "^0.25.2"
 python = "^3.12"
 psycopg2-binary = "^2.9.9"

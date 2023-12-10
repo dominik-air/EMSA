@@ -89,11 +89,9 @@ class GroupCRUD:
         return [PublicUser(**user[0].to_dict()) for user in users_data]
 
     @staticmethod
-    async def get_user_groups(user_mail: str) -> list[GroupGet]:
-        # await UserCRUD.get_user(user_mail, db)
+    async def get_user_groups(user_mail: str, db: AsyncSession) -> list[GroupGet]:
+        await UserCRUD.get_user(user_mail, db)
         query = select(Group).join(User.groups).where(User.mail == user_mail)
-        from fastapi_async_sqlalchemy import db
-        async with db():
-            result = await db.session.execute(query)
-            groups = result.fetchall()
-            return [GroupGet(**group[0].to_dict()) for group in groups]
+        result = await db.execute(query)
+        groups = result.fetchall()
+        return [GroupGet(**group[0].to_dict()) for group in groups]

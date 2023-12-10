@@ -72,12 +72,16 @@ async def test_group_delete(db_session: AsyncSession, two_groups: list[GroupGet]
 
 
 @pytest.mark.asyncio
-async def test_group_add_users_and_list(
+async def test_add_users_to_group_and_get_users(
     db_session: AsyncSession, two_users: list[PrivateUser]
 ):
     user_1, user_2 = two_users
     group_create = GroupCreate(name=GROUP_1.name, owner_mail=user_1.mail)
     created_group = await GroupCRUD.create_group(group_create, db_session)
+
+    users_in_group_before = await GroupCRUD.get_users_in_group(
+        created_group.id, db_session
+    )
     await GroupCRUD.add_users_to_group(
         group_id=created_group.id,
         user_mails=[user_1.mail, user_2.mail],
@@ -85,6 +89,7 @@ async def test_group_add_users_and_list(
     )
     users_in_group = await GroupCRUD.get_users_in_group(created_group.id, db_session)
 
+    assert len(users_in_group_before) == 0
     assert len(users_in_group) == 2
     assert user_1.mail and user_2.mail in [user.mail for user in users_in_group]
 

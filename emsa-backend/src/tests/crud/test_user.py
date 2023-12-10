@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.user import UserCRUD
+from src.crud.user import FriendCRUD, UserCRUD
 from src.database.models import Friendship, User
 from src.database.schemas import PrivateUser, PublicUser, UpdateUser
 from src.tests.conftest import USER_1, USER_2
@@ -75,7 +75,7 @@ async def test_user_delete(db_session: AsyncSession):
 @pytest.mark.asyncio
 async def test_user_add_friend(db_session: AsyncSession, two_users: list[PrivateUser]):
     user_1, user_2 = two_users
-    await UserCRUD.add_friend(user_1.mail, user_2.mail, db_session)
+    await FriendCRUD.add_friend(user_1.mail, user_2.mail, db_session)
 
     query = select(Friendship).where(
         Friendship.user_mail == user_1.mail, Friendship.friend_mail == user_2.mail
@@ -98,8 +98,8 @@ async def test_user_remove_friend(
     db_session: AsyncSession, two_users: list[PrivateUser]
 ):
     user_1, user_2 = two_users
-    await UserCRUD.add_friend(user_1.mail, user_2.mail, db_session)
-    await UserCRUD.remove_friend(user_1.mail, user_2.mail, db_session)
+    await FriendCRUD.add_friend(user_1.mail, user_2.mail, db_session)
+    await FriendCRUD.remove_friend(user_1.mail, user_2.mail, db_session)
 
     query = select(Friendship).where(
         Friendship.user_mail == user_1.mail, Friendship.friend_mail == user_2.mail
