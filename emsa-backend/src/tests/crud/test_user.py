@@ -115,3 +115,14 @@ async def test_user_remove_friend(
 
     assert friendship_1 is None
     assert friendship_2 is None
+
+
+@pytest.mark.asyncio
+async def test_get_user_friends(db_session: AsyncSession, two_users: list[PrivateUser]):
+    user_1, user_2 = two_users
+    await FriendCRUD.add_friend(user_1.mail, user_2.mail, db_session)
+
+    friends = await FriendCRUD.get_user_friends(user_1.mail, db_session)
+
+    assert len(friends) == 1
+    assert friends[0] == PublicUser(**user_2.model_dump())

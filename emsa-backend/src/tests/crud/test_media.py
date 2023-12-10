@@ -85,3 +85,21 @@ async def test_get_related_tags(db_session: AsyncSession, two_groups):
     related_media = await TagCRUD.get_related_media(TAGS_1[0].name, db_session)
 
     assert media.model_dump(exclude={"tags"}) == related_media[0].model_dump()
+
+
+@pytest.mark.asyncio
+async def test_get_media_by_group(
+    db_session: AsyncSession, two_media_on_groups: list[MediaGet]
+):
+    group_id = two_media_on_groups[0].group_id
+    another_media = MediaCreate(**{"group_id": group_id, **MEDIA_DATA_1})
+    expected_media = [
+        two_media_on_groups[0],
+        await MediaCRUD.create_media(another_media, db_session),
+    ]
+
+    media_list = await MediaCRUD.get_media_by_group(group_id, db_session)
+
+    assert len(media_list) == 2
+    for i, media in enumerate(media_list):
+        assert media.model_dump() == expected_media[i].model_dump(exclude={"tags"})
