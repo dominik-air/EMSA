@@ -12,6 +12,8 @@ authors = [
 [tool.poetry.dependencies]
 asyncpg = "^0.29"
 fastapi = "^0.104.1"
+fastapi-async-sqlalchemy = "^0.6.0"
+httpx = "^0.25.2"
 python = "^3.12"
 psycopg2-binary = "^2.9.9"
 pydantic = {version = "^2.5.2", extras = ["mypy", "email"]}
@@ -35,6 +37,7 @@ pytest-asyncio = "^0.21.1"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+addopts = "--asyncio-mode=auto"
 
 [tool.isort]
 profile = "black"

@@ -72,7 +72,4 @@ class TagCRUD:
         query = select(Media).join(Tag.media).where(Tag.name == tag_name)
         result = await db.execute(query)
         media = result.fetchall()
-
-        if media:
-            return [MediaList(**media[0].to_dict()) for media in media]
-        return []
+        return [MediaList(**media[0].to_dict()) for media in media]
