@@ -201,18 +201,14 @@ async def advanced_use_case(db_session: AsyncSession) -> dict:
     )
 
     # Add content into group 1 and 2
-    media_1 = MediaCreate(**{"group_id": group_1.id, **MEDIA_DATA_1, "tags": TAGS_1})
-    media_2 = MediaCreate(
-        **{"group_id": group_1.id, **MEDIA_DATA_2, "tags": TAGS_1[1::]}
-    )
-    media_3 = MediaCreate(**{"group_id": group_2.id, **MEDIA_DATA_3, "tags": TAGS_2})
-    media_4 = MediaCreate(
-        **{"group_id": group_2.id, **MEDIA_DATA_4, "tags": TAGS_2[1::]}
-    )
-    media_1 = await MediaCRUD.create_media(media_1, db_session)
-    media_2 = await MediaCRUD.create_media(media_2, db_session)
-    media_3 = await MediaCRUD.create_media(media_3, db_session)
-    media_4 = await MediaCRUD.create_media(media_4, db_session)
+    media_1 = MediaCreate(**{"group_id": group_1.id, **MEDIA_DATA_1})
+    media_2 = MediaCreate(**{"group_id": group_1.id, **MEDIA_DATA_2})
+    media_3 = MediaCreate(**{"group_id": group_2.id, **MEDIA_DATA_3})
+    media_4 = MediaCreate(**{"group_id": group_2.id, **MEDIA_DATA_4})
+    media_1 = await MediaCRUD.create_media(media_1, db_session, tags=TAGS_1)
+    media_2 = await MediaCRUD.create_media(media_2, db_session, tags=TAGS_1[1::])
+    media_3 = await MediaCRUD.create_media(media_3, db_session, TAGS_2)
+    media_4 = await MediaCRUD.create_media(media_4, db_session, TAGS_2[1::])
 
     return {
         "user_ids": [user.mail for user in users],

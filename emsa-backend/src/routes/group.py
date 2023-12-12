@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.group import GroupCRUD
 from src.crud.media import MediaCRUD
 from src.crud.user import FriendCRUD
-from src.database.schemas import GroupGet, MediaList, PublicUser
+from src.database.schemas import GroupGet, MediaGet, MediaQuery, PublicUser
 from src.database.session import get_db
 
 router = APIRouter()
@@ -27,7 +28,7 @@ router = APIRouter()
     },
 )
 async def user_groups(
-    user_mail: str, db: AsyncSession = Depends(get_db)
+    user_mail: EmailStr, db: AsyncSession = Depends(get_db)
 ) -> list[GroupGet]:
     try:
         groups = await GroupCRUD.get_user_groups(user_mail, db)
@@ -54,7 +55,7 @@ async def user_groups(
     },
 )
 async def mutual_groups(
-    user_mail: str, friend_mail: str, db: AsyncSession = Depends(get_db)
+    user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession = Depends(get_db)
 ):
     if not await FriendCRUD.check_if_friends(user_mail, friend_mail, db):
         raise HTTPException(
@@ -96,7 +97,7 @@ async def group_members(
     "/group_content",
     summary="Get group content",
     description="Retrieve a list of media related to group by group_id.",
-    response_model=list[MediaList],
+    response_model=list[MediaGet],
     responses={
         status.HTTP_200_OK: {
             "description": "Group media retrieved successfully",
@@ -109,9 +110,15 @@ async def group_members(
     },
 )
 async def group_content(
-    group_id: int, db: AsyncSession = Depends(get_db)
-) -> list[MediaList]:
+    group_id: int,
+    search_query: MediaQuery = Depends(),
+    db: AsyncSession = Depends(get_db),
+) -> list[MediaGet]:
     try:
-        return await MediaCRUD.get_media_by_group(group_id, db)
+        return await MediaCRUD.get_media_by_group(
+            group_id=group_id,
+            query_params=search_query,
+            db=db,
+        )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

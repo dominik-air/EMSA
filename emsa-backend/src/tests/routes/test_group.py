@@ -53,15 +53,16 @@ async def test_get_group_members(client: AsyncClient, advanced_use_case):
 
 
 @pytest.mark.asyncio
-async def test_get_group_content(client: AsyncClient, advanced_use_case):
+async def test_get_group_content(client: AsyncClient, advanced_use_case, db_session):
     group_id = advanced_use_case["group_ids"][0]
-    expected_group_members = [
+    expected_group_content = [
         {
             "group_id": group_id,
             "is_image": MEDIA_DATA_1["is_image"],
             "image_path": MEDIA_DATA_1["image_path"],
             "link": "",
             "id": ANY,
+            "tags": [{"name": "Bike"}, {"name": "FUNNY"}, {"name": "fall"}],
         },
         {
             "group_id": group_id,
@@ -69,10 +70,11 @@ async def test_get_group_content(client: AsyncClient, advanced_use_case):
             "image_path": "",
             "link": MEDIA_DATA_2["link"],
             "id": ANY,
+            "tags": [{"name": "FUNNY"}, {"name": "fall"}],
         },
     ]
 
     response = await client.get(f"/group_content?group_id={group_id}")
 
     assert response.status_code == status.HTTP_200_OK, response.json()
-    assert response.json() == expected_group_members
+    assert response.json() == expected_group_content

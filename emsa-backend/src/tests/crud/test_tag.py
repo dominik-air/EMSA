@@ -10,12 +10,13 @@ from src.tests.conftest import MEDIA_DATA_1, TAGS_1
 
 
 @pytest.mark.asyncio
-async def test_tag_create(db_session: AsyncSession):
+async def test_tag_create(db_session: AsyncSession, two_media_on_groups):
+    media, _ = two_media_on_groups
     before_creation_select = await db_session.execute(select(Tag))
     before_creation_count = len(before_creation_select.fetchall())
 
     tag_create = TagCreate(name=TAGS_1[0].name)
-    await TagCRUD.create_tag(tag_create, db_session)
+    await TagCRUD.create_tag(tag_create, db_session, media.id)
 
     after_creation_select = await db_session.execute(select(Tag))
     after_creation_count = len(after_creation_select.fetchall())
@@ -24,17 +25,21 @@ async def test_tag_create(db_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_tag_get(db_session: AsyncSession):
-    created_tag = await TagCRUD.create_tag(TagCreate(name=TAGS_1[0].name), db_session)
+async def test_tag_get(db_session: AsyncSession, two_media_on_groups):
+    media, _ = two_media_on_groups
+    created_tag = await TagCRUD.create_tag(
+        TagCreate(name=TAGS_1[0].name), db_session, media.id
+    )
     tag = await TagCRUD.get_tag(created_tag.name, db_session)
 
     assert tag.model_dump(exclude={"id"}) == TAGS_1[0].model_dump()
 
 
 @pytest.mark.asyncio
-async def test_tag_list(db_session: AsyncSession):
-    await TagCRUD.create_tag(TagCreate(name=TAGS_1[0].name), db_session)
-    await TagCRUD.create_tag(TagCreate(name=TAGS_1[1].name), db_session)
+async def test_tag_list(db_session: AsyncSession, two_media_on_groups):
+    media, _ = two_media_on_groups
+    await TagCRUD.create_tag(TagCreate(name=TAGS_1[0].name), db_session, media.id)
+    await TagCRUD.create_tag(TagCreate(name=TAGS_1[1].name), db_session, media.id)
     tags = await TagCRUD.get_tags(db_session)
 
     assert len(tags) == 2

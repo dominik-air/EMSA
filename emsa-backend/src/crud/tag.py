@@ -3,6 +3,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Media, Tag, media_tags_association
 from src.database.schemas import MediaList, TagCreate, TagGet, TagUpdate
+from src.exceptions import TagAlreadyExist
+
+
+async def associate_tag_with_media(media_id: int | None, tag_name, db):
+    if media_id is not None:
+        await db.execute(
+            media_tags_association.insert().values(media_id=media_id, tag_name=tag_name)
+        )
 
 
 class TagCRUD:
@@ -10,23 +18,21 @@ class TagCRUD:
     async def create_tag(
         tag: TagCreate, db: AsyncSession, media_id: int | None = None
     ) -> TagGet:
-        query = insert(Tag).returning(Tag).values(tag.model_dump())
-        result = await db.execute(query)
-        row = result.fetchone()
+        try:
+            existing_tag = await TagCRUD.get_tag(tag.name, db)
+        except TagAlreadyExist:
+            query = insert(Tag).returning(Tag).values(tag.model_dump())
+            result = await db.execute(query)
+            row = result.fetchone()
 
-        if row:
-            tag_name = row["name"]
+            if row:
+                await associate_tag_with_media(media_id, row["name"], db)
+                return TagGet(**row)
+            else:
+                raise ValueError("Failed to create tag. No row returned.")
 
-            if media_id is not None:
-                await db.execute(
-                    media_tags_association.insert().values(
-                        media_id=media_id, tag_name=tag_name
-                    )
-                )
-
-            return TagGet(**row)
-        else:
-            raise ValueError("Failed to create tag. No row returned.")
+        await associate_tag_with_media(media_id, tag.name, db)
+        return existing_tag
 
     @staticmethod
     async def get_tag(tag_name: str, db: AsyncSession) -> TagGet:
@@ -37,7 +43,7 @@ class TagCRUD:
         if tag_data:
             return TagGet(**tag_data[0].to_dict())
         else:
-            raise ValueError(f"No tag found with ID: {tag_name}")
+            raise TagAlreadyExist(f"No tag found with ID: {tag_name}")
 
     @staticmethod
     async def get_tags(db: AsyncSession) -> list[TagGet]:

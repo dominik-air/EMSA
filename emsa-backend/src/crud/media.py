@@ -8,6 +8,7 @@ from src.database.schemas import (
     MediaCreate,
     MediaGet,
     MediaList,
+    MediaQuery,
     MediaUpdate,
     TagCreate,
     TagGet,
@@ -88,13 +89,21 @@ class MediaCRUD:
     async def get_related_tags(media_id: int, db: AsyncSession) -> list[TagGet]:
         query = select(Tag).join(Media.tags).where(Media.id == media_id)
         result = await db.execute(query)
-        tags = result.fetchall()
-        return [TagGet(**tag[0].to_dict()) for tag in tags]
+        tags = result.scalars().all()
+        return [TagGet(**tag.to_dict()) for tag in tags]
 
     @staticmethod
-    async def get_media_by_group(group_id: int, db: AsyncSession) -> list[MediaList]:
+    async def get_media_by_group(
+        group_id: int, db: AsyncSession, query_params: MediaQuery | None = None
+    ) -> list[MediaGet]:
         await GroupCRUD.get_group(group_id, db)
         query = select(Media).where(Media.group_id == group_id)
         result = await db.execute(query)
         media_data = result.fetchall()
-        return [MediaList(**media[0].to_dict()) for media in media_data]
+
+        media_with_tags = []
+        for media in media_data:
+            tags = await MediaCRUD.get_related_tags(media[0].id, db)
+            media_with_tags.append(MediaGet(**media[0].to_dict(), tags=tags))
+
+        return media_with_tags

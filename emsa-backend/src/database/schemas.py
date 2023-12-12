@@ -65,3 +65,7 @@ class MediaUpdate(BaseModel):
     is_image: bool | None = None
     image_path: str | None = None
     link: str | None = None
+
+
+class MediaQuery(BaseModel):
+    search_term: str | None = None

@@ -4,7 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.media import MediaCRUD, TagCRUD
 from src.database.models import Media
-from src.database.schemas import MediaCreate, MediaGet, MediaUpdate
+from src.database.schemas import (
+    MediaCreate,
+    MediaGet,
+    MediaQuery,
+    MediaUpdate,
+    TagCreate,
+    TagGet,
+)
 from src.tests.conftest import MEDIA_DATA_1, TAGS_1
 
 
@@ -95,11 +102,27 @@ async def test_get_media_by_group(
     another_media = MediaCreate(**{"group_id": group_id, **MEDIA_DATA_1})
     expected_media = [
         two_media_on_groups[0],
-        await MediaCRUD.create_media(another_media, db_session),
+        await MediaCRUD.create_media(
+            another_media, db_session, tags=[TagCreate(name="abc")]
+        ),
     ]
 
     media_list = await MediaCRUD.get_media_by_group(group_id, db_session)
 
     assert len(media_list) == 2
     for i, media in enumerate(media_list):
-        assert media.model_dump() == expected_media[i].model_dump(exclude={"tags"})
+        assert media.model_dump() == expected_media[i].model_dump()
+
+
+# @pytest.mark.asyncio
+# async def test_get_media_with_search(
+#     db_session: AsyncSession, advanced_use_case
+# ):
+#     expected_media = [MediaGet(group_id=25, is_image=True, image_path='komixxy.pl', link='', id=14, tags=[TagGet(name='Bike'), TagGet(name='FUNNY'), TagGet(name='fall')])]
+#     group_id = advanced_use_case["group_ids"][0]
+#     query = MediaQuery(search_term=TAGS_1[0].name)
+#     media_list = await MediaCRUD.get_media_by_group(group_id, db_session, query)
+#
+#     assert len(media_list) == 1
+#     for i, media in enumerate(media_list):
+#         assert media.model_dump() == expected_media[i].model_dump()

@@ -1,8 +1,22 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    func,
+)
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.database.session import Base
+
+
+class TimestampMixin:
+    created_at: DateTime = Column(DateTime(timezone=True), server_default=func.now())
+
 
 user_group_association = Table(
     "user_group_association",
@@ -12,7 +26,7 @@ user_group_association = Table(
 )
 
 
-class User(Base):
+class User(Base, TimestampMixin):
     __tablename__ = "users"
 
     mail: str = Column(String(64), primary_key=True, index=True)
@@ -51,7 +65,7 @@ class User(Base):
         }
 
 
-class Friendship(Base):
+class Friendship(Base, TimestampMixin):
     __tablename__ = "friendships"
 
     id: int = Column(Integer, primary_key=True)
@@ -67,7 +81,7 @@ class Friendship(Base):
     )
 
 
-class Group(Base):
+class Group(Base, TimestampMixin):
     __tablename__ = "groups"
 
     id: int = Column(Integer, primary_key=True)
@@ -98,7 +112,7 @@ media_tags_association = Table(
 )
 
 
-class Media(Base):
+class Media(Base, TimestampMixin):
     __tablename__ = "media"
 
     id: int = Column(Integer, primary_key=True)
@@ -135,7 +149,7 @@ class Media(Base):
         }
 
 
-class Tag(Base):
+class Tag(Base, TimestampMixin):
     __tablename__ = "tags"
     name: str = Column(String(64), primary_key=True)
 

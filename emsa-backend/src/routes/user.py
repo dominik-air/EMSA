@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import FriendCRUD, UserCRUD
@@ -10,7 +11,7 @@ router = APIRouter()
 
 @router.post("/register")
 async def register(
-    mail: str, name: str, password_hash: str, db: AsyncSession = Depends(get_db)
+    mail: EmailStr, name: str, password_hash: str, db: AsyncSession = Depends(get_db)
 ):
     # TODO: change this code in issue-31 (it was added just for local development)
     user_data = PrivateUser(mail=mail, name=name, password_hash=password_hash)
@@ -41,7 +42,7 @@ async def login():
     },
 )
 async def add_friend(
-    user_mail: str, friend_mail: str, db: AsyncSession = Depends(get_db)
+    user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession = Depends(get_db)
 ) -> None:
     try:
         await FriendCRUD.add_friend(user_mail, friend_mail, db)
@@ -70,7 +71,7 @@ async def add_friend(
     },
 )
 async def remove_friend(
-    user_mail: str, friend_mail: str, db: AsyncSession = Depends(get_db)
+    user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession = Depends(get_db)
 ) -> None:
     if not await FriendCRUD.check_if_friends(user_mail, friend_mail, db):
         raise HTTPException(
@@ -99,7 +100,7 @@ async def remove_friend(
     },
 )
 async def user_friends(
-    user_mail: str, db: AsyncSession = Depends(get_db)
+    user_mail: EmailStr, db: AsyncSession = Depends(get_db)
 ) -> list[PublicUser]:
     user = await UserCRUD.get_user(user_mail, db)
     return await FriendCRUD.get_user_friends(user.mail, db)
