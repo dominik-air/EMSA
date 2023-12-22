@@ -14,6 +14,9 @@ services:
       - .env
     depends_on:
       - postgres
+    secrets:
+      - source: gcp_sa
+        target: /run/secrets/gcp-sa
 
   postgres:
     image: postgres:latest
@@ -35,6 +38,10 @@ services:
       - ./pgadmin4-data:/var/lib/pgadmin
     depends_on:
       - postgres
+
+secrets:
+  gcp_sa:
+    file: ./emsa-gcp-sa.json
 
 volumes:
   pgadmin4-data:

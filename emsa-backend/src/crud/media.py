@@ -1,4 +1,4 @@
-from fuzzywuzzy import fuzz  # type: ignore
+from fuzzywuzzy import fuzz
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

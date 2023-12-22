@@ -63,3 +63,6 @@ htmlcov/
 
 # pgadmin4 volume
 pgadmin4-data/
+
+# gcp service account json
+emsa-gcp-sa.json

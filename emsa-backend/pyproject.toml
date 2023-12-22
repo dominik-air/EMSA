@@ -22,6 +22,9 @@ python-Levenshtein = "^0.23.0"
 sqlalchemy = { version = "^1.4.50", extras = ["asyncio", "mypy"] }
 uvicorn = "^0.23.2"
 werkzeug =  "^3.0.1"
+aiohttp = "^3.9.1"
+google-auth = "^2.25.2"
+requests = "^2.31.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -51,3 +54,4 @@ max-line-length = 120
 
 [tool.mypy]
 plugins = ["sqlalchemy.ext.mypy.plugin", "pydantic.mypy"]
+ignore_missing_imports = true
