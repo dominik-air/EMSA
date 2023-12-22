@@ -3,9 +3,8 @@ from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.media import MediaCRUD
 from src.crud.user import FriendCRUD
-from src.tests.conftest import MEDIA_DATA_2, TAGS_1, USER_1, USER_2, USER_3, USER_4
+from src.tests.conftest import USER_1, USER_2, USER_3, USER_4
 
 
 @pytest.mark.asyncio

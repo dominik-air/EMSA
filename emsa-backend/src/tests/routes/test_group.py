@@ -62,7 +62,7 @@ async def test_get_group_content(client: AsyncClient, advanced_use_case, db_sess
             "image_path": MEDIA_DATA_1["image_path"],
             "link": "",
             "id": ANY,
-            "tags": [{"name": "Bike"}, {"name": "FUNNY"}, {"name": "fall"}],
+            "tags": ["Bike", "FUNNY", "fall"],
         },
         {
             "group_id": group_id,
@@ -70,7 +70,7 @@ async def test_get_group_content(client: AsyncClient, advanced_use_case, db_sess
             "image_path": "",
             "link": MEDIA_DATA_2["link"],
             "id": ANY,
-            "tags": [{"name": "FUNNY"}, {"name": "fall"}],
+            "tags": ["FUNNY", "fall"],
         },
     ]
 

@@ -22,7 +22,6 @@ from src.database.schemas import (
     MediaCreate,
     MediaGet,
     PrivateUser,
-    TagCreate,
 )
 from src.database.session import Base, engine, get_db
 from src.routes import group, health_check, user
@@ -40,13 +39,17 @@ USER_4 = PrivateUser(
 GROUP_1 = GroupCreate(name="Group 1", owner_mail="abc@gmail.com")
 GROUP_2 = GroupCreate(name="Group 2", owner_mail="bzak@agh.pl")
 
-MEDIA_DATA_1 = {"is_image": True, "image_path": "komixxy.pl"}
-MEDIA_DATA_2 = {"is_image": False, "link": "tiktok.com/dominik-air"}
-MEDIA_DATA_3 = {"is_image": True, "image_path": "example.com/image"}
-MEDIA_DATA_4 = {"is_image": False, "link": "example.com/video"}
+TAGS_1 = ["Bike", "FUNNY", "fall"]
+TAGS_2 = ["Travel", "Adventure"]
 
-TAGS_1 = [TagCreate(name="Bike"), TagCreate(name="FUNNY"), TagCreate(name="fall")]
-TAGS_2 = [TagCreate(name="Travel"), TagCreate(name="Adventure")]
+MEDIA_DATA_1 = {"is_image": True, "image_path": "komixxy.pl", "tags": TAGS_1}
+MEDIA_DATA_2 = {
+    "is_image": False,
+    "link": "tiktok.com/dominik-air",
+    "tags": TAGS_1[1::],
+}
+MEDIA_DATA_3 = {"is_image": True, "image_path": "example.com/image", "tags": TAGS_2}
+MEDIA_DATA_4 = {"is_image": False, "link": "example.com/video", "tags": TAGS_2[1::]}
 
 
 def start_application() -> FastAPI:
@@ -205,10 +208,10 @@ async def advanced_use_case(db_session: AsyncSession) -> dict:
     media_2 = MediaCreate(**{"group_id": group_1.id, **MEDIA_DATA_2})
     media_3 = MediaCreate(**{"group_id": group_2.id, **MEDIA_DATA_3})
     media_4 = MediaCreate(**{"group_id": group_2.id, **MEDIA_DATA_4})
-    media_1 = await MediaCRUD.create_media(media_1, db_session, tags=TAGS_1)
-    media_2 = await MediaCRUD.create_media(media_2, db_session, tags=TAGS_1[1::])
-    media_3 = await MediaCRUD.create_media(media_3, db_session, TAGS_2)
-    media_4 = await MediaCRUD.create_media(media_4, db_session, TAGS_2[1::])
+    media_1 = await MediaCRUD.create_media(media_1, db_session)
+    media_2 = await MediaCRUD.create_media(media_2, db_session)
+    media_3 = await MediaCRUD.create_media(media_3, db_session)
+    media_4 = await MediaCRUD.create_media(media_4, db_session)
 
     return {
         "user_ids": [user.mail for user in users],

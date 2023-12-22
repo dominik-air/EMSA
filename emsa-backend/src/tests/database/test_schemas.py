@@ -12,9 +12,6 @@ from src.database.schemas import (
     MediaUpdate,
     PrivateUser,
     PublicUser,
-    TagCreate,
-    TagGet,
-    TagUpdate,
     UpdateUser,
 )
 
@@ -65,30 +62,13 @@ def test_group_update():
     assert group_update.model_dump() == data
 
 
-def test_tag_create():
-    data = {"name": "Tag1"}
-    tag = TagCreate(**data)
-    assert tag.model_dump() == data
-
-
-def test_tag_get():
-    data = {"name": "Tag1"}
-    tag_get = TagGet(**data)
-    assert tag_get.model_dump() == data
-
-
-def test_tag_update():
-    data = {"name": "UpdatedTag"}
-    tag_update = TagUpdate(**data)
-    assert tag_update.model_dump() == data
-
-
 def test_media_create():
     data = {
         "group_id": 1,
         "is_image": True,
         "image_path": "image.jpg",
         "link": "example.com",
+        "tags": ["a", "b", "c"],
     }
     media = MediaCreate(**data)
     assert media.model_dump() == data
@@ -101,6 +81,7 @@ def test_media_list():
         "is_image": True,
         "image_path": "image.jpg",
         "link": "example.com",
+        "tags": ["a", "b", "c"],
     }
     media_list = MediaList(**data)
     assert media_list.model_dump() == data
@@ -113,7 +94,7 @@ def test_media_get():
         "is_image": True,
         "image_path": "image.jpg",
         "link": "example.com",
-        "tags": [{"name": "Tag1"}],
+        "tags": ["a", "b", "c"],
     }
     media_get = MediaGet(**data)
     assert media_get.model_dump() == data

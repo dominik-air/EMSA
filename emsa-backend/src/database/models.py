@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    ARRAY,
     Boolean,
     Column,
     DateTime,
@@ -7,11 +8,9 @@ from sqlalchemy import (
     String,
     Table,
     func,
-    Index,
 )
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
-from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from src.database.session import Base
 
@@ -106,14 +105,6 @@ class Group(Base, TimestampMixin):
         }
 
 
-media_tags_association = Table(
-    "media_tags_association",
-    Base.metadata,
-    Column("media_id", Integer, ForeignKey("media.id"), primary_key=True),
-    Column("tag_name", String, ForeignKey("tags.name"), primary_key=True),
-)
-
-
 class Media(Base, TimestampMixin):
     __tablename__ = "media"
 
@@ -122,14 +113,10 @@ class Media(Base, TimestampMixin):
     is_image: bool = Column(Boolean, nullable=False)
     image_path: str = Column(String)
     link: str = Column(String)
+    tags: list[str] = Column(ARRAY(String))
 
     # many-to-one relationship with the Group
     group: Group = relationship("Group", back_populates="media")
-
-    # many-to-many relationship with Tags
-    tags: list["Tag"] = relationship(
-        "Tag", secondary=media_tags_association, back_populates="media"
-    )
 
     def __repr__(self) -> str:
         return (
@@ -138,7 +125,8 @@ class Media(Base, TimestampMixin):
             f"group_id={self.group_id}, "
             f"is_image={self.is_image}, "
             f"image_path={self.image_path}, "
-            f"link={self.link})>"
+            f"link={self.link}, "
+            f"tags={self.tags})>"
         )
 
     def to_dict(self) -> dict:
@@ -148,23 +136,5 @@ class Media(Base, TimestampMixin):
             "is_image": self.is_image,
             "image_path": self.image_path,
             "link": self.link,
-        }
-
-
-class Tag(Base, TimestampMixin):
-    __tablename__ = "tags"
-    name: str = Column(String(64), primary_key=True)
-    # https://stackoverflow.com/questions/37389216/how-to-create-gin-index-on-text-array-column-in-sqlalchemy-with-postgresql-and
-
-    # many-to-many relationship with Media
-    media: list["Media"] = relationship(
-        "Media", secondary=media_tags_association, back_populates="tags"
-    )
-
-    def __repr__(self) -> str:
-        return f"<Tag(name={self.name})>"
-
-    def to_dict(self) -> dict:
-        return {
-            "name": self.name,
+            "tags": self.tags,
         }

@@ -2,18 +2,10 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.media import MediaCRUD, TagCRUD
+from src.crud.media import MediaCRUD
 from src.database.models import Media
-from src.database.schemas import (
-    MediaCreate,
-    MediaGet,
-    MediaQuery,
-    MediaUpdate,
-    TagCreate,
-    TagGet,
-)
+from src.database.schemas import MediaCreate, MediaGet, MediaQuery, MediaUpdate
 from src.tests.conftest import MEDIA_DATA_1, TAGS_1
-from unittest.mock import ANY
 
 
 @pytest.mark.asyncio
@@ -31,6 +23,15 @@ async def test_media_create(db_session: AsyncSession, two_groups: list):
 
 
 @pytest.mark.asyncio
+async def test_media_tag_creation(db_session: AsyncSession, two_groups):
+    media_create = MediaCreate(**{"group_id": two_groups[0].id, **MEDIA_DATA_1})
+    media = await MediaCRUD.create_media(media_create, db_session)
+
+    assert media.tags == TAGS_1
+    assert media.model_dump(exclude={"id"}) == media_create.model_dump()
+
+
+@pytest.mark.asyncio
 async def test_media_get(db_session: AsyncSession, two_media_on_groups: list[MediaGet]):
     media = await MediaCRUD.get_media(two_media_on_groups[0].id, db_session)
 
@@ -45,7 +46,7 @@ async def test_media_list(
 
     assert len(media_list) == 2
     for i, media in enumerate(media_list):
-        assert media.model_dump() == two_media_on_groups[i].model_dump(exclude={"tags"})
+        assert media.model_dump() == two_media_on_groups[i].model_dump()
 
 
 @pytest.mark.asyncio
@@ -86,16 +87,6 @@ async def test_media_delete(
 
 
 @pytest.mark.asyncio
-async def test_get_related_tags(db_session: AsyncSession, two_groups):
-    media_create = MediaCreate(**{"group_id": two_groups[0].id, **MEDIA_DATA_1})
-    media = await MediaCRUD.create_media(media_create, db_session, TAGS_1)
-
-    related_media = await TagCRUD.get_related_media(TAGS_1[0].name, db_session)
-
-    assert media.model_dump(exclude={"tags"}) == related_media[0].model_dump()
-
-
-@pytest.mark.asyncio
 async def test_get_media_by_group(
     db_session: AsyncSession, two_media_on_groups: list[MediaGet]
 ):
@@ -103,9 +94,7 @@ async def test_get_media_by_group(
     another_media = MediaCreate(**{"group_id": group_id, **MEDIA_DATA_1})
     expected_media = [
         two_media_on_groups[0],
-        await MediaCRUD.create_media(
-            another_media, db_session, tags=[TagCreate(name="abc")]
-        ),
+        await MediaCRUD.create_media(another_media, db_session),
     ]
 
     media_list = await MediaCRUD.get_media_by_group(group_id, db_session)
