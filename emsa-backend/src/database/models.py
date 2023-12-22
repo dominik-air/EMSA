@@ -7,9 +7,11 @@ from sqlalchemy import (
     String,
     Table,
     func,
+    Index,
 )
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
+from sqlalchemy.dialects.postgresql import TSVECTOR
 
 from src.database.session import Base
 
@@ -152,6 +154,7 @@ class Media(Base, TimestampMixin):
 class Tag(Base, TimestampMixin):
     __tablename__ = "tags"
     name: str = Column(String(64), primary_key=True)
+    # https://stackoverflow.com/questions/37389216/how-to-create-gin-index-on-text-array-column-in-sqlalchemy-with-postgresql-and
 
     # many-to-many relationship with Media
     media: list["Media"] = relationship(

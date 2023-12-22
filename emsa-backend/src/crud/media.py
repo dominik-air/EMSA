@@ -1,9 +1,10 @@
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, insert, select, update, func, cast, String, any_
+from sqlalchemy.dialects.postgresql import ARRAY, TSVECTOR
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.group import GroupCRUD
 from src.crud.tag import TagCRUD
-from src.database.models import Media, Tag
+from src.database.models import Media, Tag, media_tags_association
 from src.database.schemas import (
     MediaCreate,
     MediaGet,
@@ -98,6 +99,13 @@ class MediaCRUD:
     ) -> list[MediaGet]:
         await GroupCRUD.get_group(group_id, db)
         query = select(Media).where(Media.group_id == group_id)
+
+        if query_params and query_params.search_term:
+            search_term_lower = query_params.search_term.lower()
+            query = query.join(media_tags_association).join(Tag).filter(
+                func.lower(Tag.name).like(search_term_lower)
+            )
+
         result = await db.execute(query)
         media_data = result.fetchall()
 

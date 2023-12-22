@@ -13,6 +13,7 @@ from src.database.schemas import (
     TagGet,
 )
 from src.tests.conftest import MEDIA_DATA_1, TAGS_1
+from unittest.mock import ANY
 
 
 @pytest.mark.asyncio
@@ -114,15 +115,13 @@ async def test_get_media_by_group(
         assert media.model_dump() == expected_media[i].model_dump()
 
 
-# @pytest.mark.asyncio
-# async def test_get_media_with_search(
-#     db_session: AsyncSession, advanced_use_case
-# ):
-#     expected_media = [MediaGet(group_id=25, is_image=True, image_path='komixxy.pl', link='', id=14, tags=[TagGet(name='Bike'), TagGet(name='FUNNY'), TagGet(name='fall')])]
-#     group_id = advanced_use_case["group_ids"][0]
-#     query = MediaQuery(search_term=TAGS_1[0].name)
-#     media_list = await MediaCRUD.get_media_by_group(group_id, db_session, query)
-#
-#     assert len(media_list) == 1
-#     for i, media in enumerate(media_list):
-#         assert media.model_dump() == expected_media[i].model_dump()
+@pytest.mark.parametrize("search", ["Bike", "bike", "BIKE", "bik"])
+@pytest.mark.asyncio
+async def test_get_media_with_search(
+    search, db_session: AsyncSession, advanced_use_case
+):
+    group_id = advanced_use_case["group_ids"][0]
+    query = MediaQuery(search_term=search)
+    media_list = await MediaCRUD.get_media_by_group(group_id, db_session, query)
+
+    assert len(media_list) == 1
