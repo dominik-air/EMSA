@@ -1,4 +1,5 @@
-from sqlalchemy import delete, func, insert, literal_column, select, update
+from fuzzywuzzy import fuzz  # type: ignore
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.group import GroupCRUD
@@ -71,19 +72,24 @@ class MediaCRUD:
     ) -> list[MediaGet]:
         await GroupCRUD.get_group(group_id, db)
         query = select(Media).where(Media.group_id == group_id)
-
-        if query_params and query_params.search_term:
-            search_term_lower = query_params.search_term.lower()
-            subquery = select(
-                literal_column("media.id").label("media_id"),
-                func.unnest(Media.tags).label("tag"),
-            ).alias("tags_subquery")
-
-            query = query.join(subquery, subquery.c.media_id == Media.id).filter(
-                func.lower(subquery.c.tag).like(search_term_lower)
-            )
-
         result = await db.execute(query)
         media_data = result.fetchall()
+
+        if query_params and query_params.search_term:
+            search_term = query_params.search_term.lower()
+            similarity_threshold = 0.65  # TODO: Adjust the threshold if needed
+
+            query = select(Media).where(Media.group_id == group_id)
+            result = await db.execute(query)
+            media_data = result.fetchall()
+
+            media_data = [
+                media
+                for media in media_data
+                if any(
+                    fuzz.ratio(search_term, tag.lower()) / 100 >= similarity_threshold
+                    for tag in media[0].tags
+                )
+            ]
 
         return [MediaGet(**media[0].to_dict()) for media in media_data]

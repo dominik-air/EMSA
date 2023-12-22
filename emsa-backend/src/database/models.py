@@ -1,5 +1,6 @@
+from datetime import datetime
+
 from sqlalchemy import (
-    ARRAY,
     Boolean,
     Column,
     DateTime,
@@ -7,8 +8,11 @@ from sqlalchemy import (
     Integer,
     String,
     Table,
+    Text,
+    cast,
     func,
 )
+from sqlalchemy.dialects.postgresql import ARRAY, array
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -16,7 +20,7 @@ from src.database.session import Base
 
 
 class TimestampMixin:
-    created_at: DateTime = Column(DateTime(timezone=True), server_default=func.now())
+    created_at: datetime = Column(DateTime(timezone=True), server_default=func.now())
 
 
 user_group_association = Table(
@@ -113,7 +117,9 @@ class Media(Base, TimestampMixin):
     is_image: bool = Column(Boolean, nullable=False)
     image_path: str = Column(String)
     link: str = Column(String)
-    tags: list[str] = Column(ARRAY(String))
+    tags: list[str] = Column(
+        ARRAY(Text), nullable=False, default=cast(array([], type_=Text), ARRAY(Text))
+    )
 
     # many-to-one relationship with the Group
     group: Group = relationship("Group", back_populates="media")

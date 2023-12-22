@@ -8,6 +8,7 @@ from src.tests.conftest import (
     GROUP_1,
     MEDIA_DATA_1,
     MEDIA_DATA_2,
+    TAGS_1,
     USER_1,
     USER_2,
     USER_3,
@@ -78,3 +79,40 @@ async def test_get_group_content(client: AsyncClient, advanced_use_case, db_sess
 
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert response.json() == expected_group_content
+
+
+@pytest.mark.asyncio
+async def test_group_content_search_term(client: AsyncClient, advanced_use_case):
+    group_id = advanced_use_case["group_ids"][0]
+
+    response = await client.get(
+        f"/group_content?group_id={group_id}&search_term={TAGS_1[0]}"
+    )
+    assert response.status_code == status.HTTP_200_OK, response.json()
+    assert len(response.json()) == 1
+    assert response.json()[0]["id"] in advanced_use_case["media_ids"]
+
+
+@pytest.mark.asyncio
+async def test_group_content_no_search_term(client: AsyncClient, advanced_use_case):
+    group_id = advanced_use_case["group_ids"][0]
+
+    response = await client.get(f"/group_content?group_id={group_id}")
+    assert response.status_code == status.HTTP_200_OK, response.json()
+    assert len(response.json()) == 2
+    assert all(
+        media["id"] in advanced_use_case["media_ids"] for media in response.json()
+    )
+
+
+@pytest.mark.asyncio
+async def test_group_content_nonexistent_search_term(
+    client: AsyncClient, advanced_use_case
+):
+    group_id = advanced_use_case["group_ids"][0]
+
+    response = await client.get(
+        f"/group_content?group_id={group_id}&search_term=nonexistent"
+    )
+    assert response.status_code == status.HTTP_200_OK, response.json()
+    assert len(response.json()) == 0

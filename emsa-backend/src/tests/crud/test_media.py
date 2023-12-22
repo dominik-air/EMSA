@@ -104,7 +104,9 @@ async def test_get_media_by_group(
         assert media.model_dump() == expected_media[i].model_dump()
 
 
-@pytest.mark.parametrize("search", ["Bike", "bike", "BIKE", "bik"])
+@pytest.mark.parametrize(
+    "search", ["Bike", "bike", "BIKE", "BiKe", "bik", "bIk", "bIK", "bi", "BI", "bI"]
+)
 @pytest.mark.asyncio
 async def test_get_media_with_search(
     search, db_session: AsyncSession, advanced_use_case

@@ -12,11 +12,13 @@ authors = [
 [tool.poetry.dependencies]
 asyncpg = "^0.29"
 fastapi = "^0.104.1"
+fuzzywuzzy = "^0.18.0"
 httpx = "^0.25.2"
 python = "^3.12"
 psycopg2-binary = "^2.9.9"
 pydantic = {version = "^2.5.2", extras = ["mypy", "email"]}
 pydantic-settings = "^2.1.0"
+python-Levenshtein = "^0.23.0"
 sqlalchemy = { version = "^1.4.50", extras = ["asyncio", "mypy"] }
 uvicorn = "^0.23.2"
 werkzeug =  "^3.0.1"
