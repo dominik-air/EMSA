@@ -1,4 +1,5 @@
-from sqlalchemy import delete, insert, select, update
+from pydantic import EmailStr
+from sqlalchemy import delete, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.models import Friendship, User
@@ -18,7 +19,7 @@ class UserCRUD:
             raise ValueError("Failed to create user. No row returned.")
 
     @staticmethod
-    async def get_user(user_mail: str, db: AsyncSession) -> PrivateUser:
+    async def get_user(user_mail: EmailStr, db: AsyncSession) -> PrivateUser:
         query = select(User).where(User.mail == user_mail)
         result = await db.execute(query)
         user_data = result.fetchone()
@@ -36,7 +37,9 @@ class UserCRUD:
         return [PublicUser(**user[0].to_dict()) for user in users_data]
 
     @staticmethod
-    async def update_user(mail: str, user: UpdateUser, db: AsyncSession) -> PrivateUser:
+    async def update_user(
+        mail: EmailStr, user: UpdateUser, db: AsyncSession
+    ) -> PrivateUser:
         query = (
             update(User)
             .values(name=user.name, password_hash=user.password_hash)
@@ -52,15 +55,19 @@ class UserCRUD:
             raise ValueError(f"No user found with mail: {mail}")
 
     @staticmethod
-    async def delete_user(mail: str, db: AsyncSession) -> None:
-        query = delete(User).where(User.mail == mail)
-        await db.execute(query)
+    async def delete_user(mail: EmailStr, db: AsyncSession) -> None:
+        await db.execute(
+            delete(Friendship).where(
+                or_(Friendship.user_mail == mail, Friendship.friend_mail == mail)
+            )
+        )
+        await db.execute(delete(User).where(User.mail == mail))
 
 
 class FriendCRUD:
     @staticmethod
     async def check_if_friends(
-        user_mail: str, friend_mail: str, db: AsyncSession
+        user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession
     ) -> bool:
         query = select(Friendship).where(
             Friendship.user_mail == user_mail, Friendship.friend_mail == friend_mail
@@ -71,7 +78,9 @@ class FriendCRUD:
         return friendship is not None
 
     @staticmethod
-    async def get_user_friends(user_mail: str, db: AsyncSession) -> list[PublicUser]:
+    async def get_user_friends(
+        user_mail: EmailStr, db: AsyncSession
+    ) -> list[PublicUser]:
         query = (
             select(User)
             .join(Friendship, User.mail == Friendship.friend_mail)
@@ -82,7 +91,9 @@ class FriendCRUD:
         return [PublicUser(**friend[0].to_dict()) for friend in friends_data]
 
     @staticmethod
-    async def add_friend(user_mail: str, friend_mail: str, db: AsyncSession) -> None:
+    async def add_friend(
+        user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession
+    ) -> None:
         await UserCRUD.get_user(user_mail, db)
         await UserCRUD.get_user(friend_mail, db)
 
@@ -100,7 +111,9 @@ class FriendCRUD:
         await db.execute(query)
 
     @staticmethod
-    async def remove_friend(user_mail: str, friend_mail: str, db: AsyncSession) -> None:
+    async def remove_friend(
+        user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession
+    ) -> None:
         query = delete(Friendship).where(
             Friendship.user_mail == user_mail, Friendship.friend_mail == friend_mail
         )

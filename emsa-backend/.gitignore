@@ -12,6 +12,7 @@ env/
 build/
 dist/
 eggs/
+venv/
 .venv/
 *.egg-info/
 *.egg

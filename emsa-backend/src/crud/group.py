@@ -1,8 +1,9 @@
+from pydantic import EmailStr
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import UserCRUD
-from src.database.models import Group, User, user_group_association
+from src.database.models import Group, Media, User, user_group_association
 from src.database.schemas import GroupCreate, GroupGet, GroupUpdate, PublicUser
 
 
@@ -62,13 +63,18 @@ class GroupCRUD:
 
     @staticmethod
     async def delete_group(group_id: int, db: AsyncSession) -> None:
-        query = delete(Group).where(Group.id == group_id)
-        await db.execute(query)
+        await db.execute(delete(Media).where(Media.group_id == group_id))
+        await db.execute(
+            delete(user_group_association).where(
+                user_group_association.c.group_id == group_id
+            )
+        )
+        await db.execute(delete(Group).where(Group.id == group_id))
 
     @staticmethod
     async def add_users_to_group(
         group_id: int,
-        user_mails: list[str],
+        user_mails: list[EmailStr],
         db: AsyncSession,
     ) -> None:
         for user_mail in user_mails:
@@ -95,3 +101,26 @@ class GroupCRUD:
         result = await db.execute(query)
         groups = result.fetchall()
         return [GroupGet(**group[0].to_dict()) for group in groups]
+
+    @staticmethod
+    async def get_user_owned_groups(user_mail: str, db: AsyncSession) -> list[GroupGet]:
+        query = select(Group).where(Group.owner_mail == user_mail)
+        result = await db.execute(query)
+        groups = result.fetchall()
+        return [GroupGet(**group[0].to_dict()) for group in groups]
+
+    @staticmethod
+    async def remove_user_from_group(
+        group_id: int,
+        member_mail: str,
+        db: AsyncSession,
+    ) -> None:
+        await GroupCRUD.get_group(group_id, db)
+        await UserCRUD.get_user(member_mail, db)
+
+        query = (
+            delete(user_group_association)
+            .where(user_group_association.c.group_id == group_id)
+            .where(user_group_association.c.user_mail == member_mail)
+        )
+        await db.execute(query)

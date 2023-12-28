@@ -4,6 +4,7 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
+from src.crud.group import GroupCRUD
 from src.tests.conftest import (
     GROUP_1,
     MEDIA_DATA_1,
@@ -13,6 +14,59 @@ from src.tests.conftest import (
     USER_2,
     USER_3,
 )
+
+
+@pytest.mark.asyncio
+async def test_create_group(client: AsyncClient, advanced_use_case):
+    payload = {"name": "GroupOfUser4", "owner_mail": advanced_use_case["user_ids"][3]}
+    expected_group_creation = {
+        "id": ANY,
+        "name": "GroupOfUser4",
+        "owner_mail": "radek@example.com",
+    }
+
+    response = await client.post(
+        f"/create_group?name=GroupOfUser4&owner_mail={expected_group_creation['owner_mail']}",
+        json=payload,
+    )
+    assert response.status_code == status.HTTP_201_CREATED, response.json()
+    assert response.json() == expected_group_creation
+
+
+@pytest.mark.asyncio
+async def test_add_group_members(client: AsyncClient, advanced_use_case, db_session):
+    group_id = advanced_use_case["group_ids"][1]
+    payload = [advanced_use_case["user_ids"][0], advanced_use_case["user_ids"][2]]
+    members_before = await GroupCRUD.get_users_in_group(group_id, db_session)
+
+    response = await client.post(
+        f"/add_group_members?group_id={group_id}",
+        json=payload,
+    )
+    members_after = await GroupCRUD.get_users_in_group(group_id, db_session)
+
+    for user in payload:
+        assert user not in [user.mail for user in members_before]
+        assert user in [user.mail for user in members_after]
+    assert len(members_after) == len(members_before) + 2
+    assert response.status_code == status.HTTP_200_OK, response.json()
+
+
+@pytest.mark.asyncio
+async def test_remove_member(client: AsyncClient, advanced_use_case, db_session):
+    group_id = advanced_use_case["group_ids"][0]
+    member_to_delete = advanced_use_case["user_ids"][1]
+    members_before = await GroupCRUD.get_users_in_group(group_id, db_session)
+
+    response = await client.delete(
+        f"/remove_member?group_id={group_id}&member_mail={member_to_delete}"
+    )
+    members_after = await GroupCRUD.get_users_in_group(group_id, db_session)
+
+    assert member_to_delete in [user.mail for user in members_before]
+    assert member_to_delete not in [user.mail for user in members_after]
+    assert len(members_after) == len(members_before) - 1
+    assert response.status_code == status.HTTP_204_NO_CONTENT, response.json()
 
 
 @pytest.mark.asyncio
@@ -116,3 +170,17 @@ async def test_group_content_nonexistent_search_term(
     )
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert len(response.json()) == 0
+
+
+@pytest.mark.asyncio
+async def test_remove_group(client: AsyncClient, advanced_use_case, db_session):
+    group_id_to_delete = advanced_use_case["group_ids"][0]
+    groups_before = await GroupCRUD.get_groups(db_session)
+
+    response = await client.delete(f"/remove_group?group_id={group_id_to_delete}")
+    groups_after = await GroupCRUD.get_groups(db_session)
+
+    assert group_id_to_delete in [group.id for group in groups_before]
+    assert group_id_to_delete not in [group.id for group in groups_after]
+    assert len(groups_after) == len(groups_before) - 1
+    assert response.status_code == status.HTTP_204_NO_CONTENT, response.json()
