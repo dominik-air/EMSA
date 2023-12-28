@@ -1,8 +1,27 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Table
+from datetime import datetime
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    Text,
+    cast,
+    func,
+)
+from sqlalchemy.dialects.postgresql import ARRAY, array
 from sqlalchemy.orm import relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.database.session import Base
+
+
+class TimestampMixin:
+    created_at: datetime = Column(DateTime(timezone=True), server_default=func.now())
+
 
 user_group_association = Table(
     "user_group_association",
@@ -12,7 +31,7 @@ user_group_association = Table(
 )
 
 
-class User(Base):
+class User(Base, TimestampMixin):
     __tablename__ = "users"
 
     mail: str = Column(String(64), primary_key=True, index=True)
@@ -51,7 +70,7 @@ class User(Base):
         }
 
 
-class Friendship(Base):
+class Friendship(Base, TimestampMixin):
     __tablename__ = "friendships"
 
     id: int = Column(Integer, primary_key=True)
@@ -67,7 +86,7 @@ class Friendship(Base):
     )
 
 
-class Group(Base):
+class Group(Base, TimestampMixin):
     __tablename__ = "groups"
 
     id: int = Column(Integer, primary_key=True)
@@ -90,15 +109,7 @@ class Group(Base):
         }
 
 
-media_tags_association = Table(
-    "media_tags_association",
-    Base.metadata,
-    Column("media_id", Integer, ForeignKey("media.id"), primary_key=True),
-    Column("tag_name", String, ForeignKey("tags.name"), primary_key=True),
-)
-
-
-class Media(Base):
+class Media(Base, TimestampMixin):
     __tablename__ = "media"
 
     id: int = Column(Integer, primary_key=True)
@@ -106,14 +117,12 @@ class Media(Base):
     is_image: bool = Column(Boolean, nullable=False)
     image_path: str = Column(String)
     link: str = Column(String)
+    tags: list[str] = Column(
+        ARRAY(Text), nullable=False, default=cast(array([], type_=Text), ARRAY(Text))
+    )
 
     # many-to-one relationship with the Group
     group: Group = relationship("Group", back_populates="media")
-
-    # many-to-many relationship with Tags
-    tags: list["Tag"] = relationship(
-        "Tag", secondary=media_tags_association, back_populates="media"
-    )
 
     def __repr__(self) -> str:
         return (
@@ -122,7 +131,8 @@ class Media(Base):
             f"group_id={self.group_id}, "
             f"is_image={self.is_image}, "
             f"image_path={self.image_path}, "
-            f"link={self.link})>"
+            f"link={self.link}, "
+            f"tags={self.tags})>"
         )
 
     def to_dict(self) -> dict:
@@ -132,22 +142,5 @@ class Media(Base):
             "is_image": self.is_image,
             "image_path": self.image_path,
             "link": self.link,
-        }
-
-
-class Tag(Base):
-    __tablename__ = "tags"
-    name: str = Column(String(64), primary_key=True)
-
-    # many-to-many relationship with Media
-    media: list["Media"] = relationship(
-        "Media", secondary=media_tags_association, back_populates="tags"
-    )
-
-    def __repr__(self) -> str:
-        return f"<Tag(name={self.name})>"
-
-    def to_dict(self) -> dict:
-        return {
-            "name": self.name,
+            "tags": self.tags,
         }

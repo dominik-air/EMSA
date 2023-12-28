@@ -56,6 +56,8 @@ class UserCRUD:
         query = delete(User).where(User.mail == mail)
         await db.execute(query)
 
+
+class FriendCRUD:
     @staticmethod
     async def check_if_friends(
         user_mail: str, friend_mail: str, db: AsyncSession
@@ -69,21 +71,32 @@ class UserCRUD:
         return friendship is not None
 
     @staticmethod
+    async def get_user_friends(user_mail: str, db: AsyncSession) -> list[PublicUser]:
+        query = (
+            select(User)
+            .join(Friendship, User.mail == Friendship.friend_mail)
+            .where(Friendship.user_mail == user_mail)
+        )
+        result = await db.execute(query)
+        friends_data = result.fetchall()
+        return [PublicUser(**friend[0].to_dict()) for friend in friends_data]
+
+    @staticmethod
     async def add_friend(user_mail: str, friend_mail: str, db: AsyncSession) -> None:
         await UserCRUD.get_user(user_mail, db)
         await UserCRUD.get_user(friend_mail, db)
 
-        if await UserCRUD.check_if_friends(user_mail, friend_mail, db):
+        if await FriendCRUD.check_if_friends(user_mail, friend_mail, db):
             raise ValueError("Users are already friends")
 
-        user_friendship = FriendshipCreate(user_mail=user_mail, friend_mail=friend_mail)
-        friend_friendship = FriendshipCreate(
-            user_mail=friend_mail, friend_mail=user_mail
-        )
+        friendships = [
+            FriendshipCreate(user_mail=user_mail, friend_mail=friend_mail),
+            FriendshipCreate(user_mail=friend_mail, friend_mail=user_mail),
+        ]
 
-        query = insert(Friendship).values(user_friendship.model_dump())
-        await db.execute(query)
-        query = insert(Friendship).values(friend_friendship.model_dump())
+        query = insert(Friendship).values(
+            [friendship.model_dump() for friendship in friendships]
+        )
         await db.execute(query)
 
     @staticmethod

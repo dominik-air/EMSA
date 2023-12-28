@@ -34,23 +34,12 @@ class GroupUpdate(BaseModel):
     owner_mail: EmailStr | None = None
 
 
-class TagCreate(BaseModel):
-    name: str
-
-
-class TagGet(TagCreate):
-    ...
-
-
-class TagUpdate(BaseModel):
-    name: str | None = None
-
-
 class MediaCreate(BaseModel):
     group_id: int
     is_image: bool
     image_path: str = ""
     link: str = ""
+    tags: list[str] = []
 
 
 class MediaList(MediaCreate):
@@ -58,10 +47,14 @@ class MediaList(MediaCreate):
 
 
 class MediaGet(MediaList):
-    tags: list[TagGet]
+    ...
 
 
 class MediaUpdate(BaseModel):
     is_image: bool | None = None
     image_path: str | None = None
     link: str | None = None
+
+
+class MediaQuery(BaseModel):
+    search_term: str | None = None

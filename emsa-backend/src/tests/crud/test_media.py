@@ -2,10 +2,10 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.media import MediaCRUD, TagCRUD
+from src.crud.media import MediaCRUD
 from src.database.models import Media
-from src.database.schemas import MediaCreate, MediaGet, MediaUpdate
-from src.tests.conftest import MEDIA_DATA_1, TAGS
+from src.database.schemas import MediaCreate, MediaGet, MediaQuery, MediaUpdate
+from src.tests.conftest import MEDIA_DATA_1, TAGS_1
 
 
 @pytest.mark.asyncio
@@ -23,6 +23,15 @@ async def test_media_create(db_session: AsyncSession, two_groups: list):
 
 
 @pytest.mark.asyncio
+async def test_media_tag_creation(db_session: AsyncSession, two_groups):
+    media_create = MediaCreate(**{"group_id": two_groups[0].id, **MEDIA_DATA_1})
+    media = await MediaCRUD.create_media(media_create, db_session)
+
+    assert media.tags == TAGS_1
+    assert media.model_dump(exclude={"id"}) == media_create.model_dump()
+
+
+@pytest.mark.asyncio
 async def test_media_get(db_session: AsyncSession, two_media_on_groups: list[MediaGet]):
     media = await MediaCRUD.get_media(two_media_on_groups[0].id, db_session)
 
@@ -37,7 +46,7 @@ async def test_media_list(
 
     assert len(media_list) == 2
     for i, media in enumerate(media_list):
-        assert media.model_dump() == two_media_on_groups[i].model_dump(exclude={"tags"})
+        assert media.model_dump() == two_media_on_groups[i].model_dump()
 
 
 @pytest.mark.asyncio
@@ -78,10 +87,32 @@ async def test_media_delete(
 
 
 @pytest.mark.asyncio
-async def test_get_related_tags(db_session: AsyncSession, two_groups):
-    media_create = MediaCreate(**{"group_id": two_groups[0].id, **MEDIA_DATA_1})
-    media = await MediaCRUD.create_media(media_create, db_session, TAGS)
+async def test_get_media_by_group(
+    db_session: AsyncSession, two_media_on_groups: list[MediaGet]
+):
+    group_id = two_media_on_groups[0].group_id
+    another_media = MediaCreate(**{"group_id": group_id, **MEDIA_DATA_1})
+    expected_media = [
+        two_media_on_groups[0],
+        await MediaCRUD.create_media(another_media, db_session),
+    ]
 
-    related_media = await TagCRUD.get_related_media(TAGS[0].name, db_session)
+    media_list = await MediaCRUD.get_media_by_group(group_id, db_session)
 
-    assert media.model_dump(exclude={"tags"}) == related_media[0].model_dump()
+    assert len(media_list) == 2
+    for i, media in enumerate(media_list):
+        assert media.model_dump() == expected_media[i].model_dump()
+
+
+@pytest.mark.parametrize(
+    "search", ["Bike", "bike", "BIKE", "BiKe", "bik", "bIk", "bIK", "bi", "BI", "bI"]
+)
+@pytest.mark.asyncio
+async def test_get_media_with_search(
+    search, db_session: AsyncSession, advanced_use_case
+):
+    group_id = advanced_use_case["group_ids"][0]
+    query = MediaQuery(search_term=search)
+    media_list = await MediaCRUD.get_media_by_group(group_id, db_session, query)
+
+    assert len(media_list) == 1
