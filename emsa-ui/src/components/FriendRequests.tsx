@@ -185,7 +185,13 @@ interface FriendRequestsProps {
                 <Button
                   variant="contained"
                   color="secondary"
+<<<<<<< HEAD
                   onClick={() => handleRemoveFriend(friend.name)} 
+=======
+                  onClick={() => {
+                    /* handle remove friend */
+                  }}
+>>>>>>> baad969 (frontend kinda works now)
                 >
                   Remove
                 </Button>

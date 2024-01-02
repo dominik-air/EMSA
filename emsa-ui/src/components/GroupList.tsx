@@ -26,7 +26,7 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
 
   useEffect(() => {
     fetchUserGroups();
-  });
+  }, [userEmail]);
 
   const fetchUserGroups = () => {
     axios
