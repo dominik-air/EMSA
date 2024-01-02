@@ -38,7 +38,7 @@ export default function SignIn() {
       const response = await loginService(username, password);
       const { token } = response;
 
-      login(token);
+      login(username, token);
       setLoginError("");
     } catch (error) {
       console.error("Login error", error);

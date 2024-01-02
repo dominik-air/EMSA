@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Box, Button, AppBar, Toolbar, InputBase } from "@mui/material";
+import {
+  Box,
+  Button,
+  AppBar,
+  Toolbar,
+  InputBase,
+  Typography,
+} from "@mui/material";
 import {
   Dialog,
   DialogTitle,
@@ -64,7 +71,11 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const ManageMemes = () => {
+interface ManageMemesProps {
+  currentGroup: string;
+}
+
+const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [memes, setMemes] = useState<Meme[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -74,9 +85,10 @@ const ManageMemes = () => {
   useEffect(() => {
     const fetchMemes = async () => {
       try {
-        const response = await axios.get<Meme[]>(
-          `${API_URL}/memes/?searchTerm=${encodeURIComponent(searchTerm)}`,
-        );
+        const response = await axios.post<Meme[]>(`${API_URL}/memes`, {
+          group: currentGroup,
+          searchTerm: searchTerm,
+        });
         setMemes(response.data);
       } catch (error) {
         console.error("Error fetching memes:", error);
@@ -86,7 +98,7 @@ const ManageMemes = () => {
     if (searchTerm) {
       fetchMemes();
     }
-  }, [searchTerm, API_URL]);
+  }, [searchTerm, currentGroup, API_URL]);
 
   const onDrop = (acceptedFiles: File[]) => {
     setFiles(
@@ -114,6 +126,12 @@ const ManageMemes = () => {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
+      <Typography
+        variant="h6"
+        sx={{ flexGrow: 1, textAlign: "center", margin: 2 }}
+      >
+        {currentGroup}
+      </Typography>
       <AppBar position="static" color="default">
         <Toolbar>
           <Search>
