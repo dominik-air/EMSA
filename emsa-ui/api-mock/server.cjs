@@ -41,7 +41,7 @@ app.post('/user_groups', (req, res) => {
 });
 
 let users = [{
-  username: 'demoUser',
+  username: 'email@example.com',
   password: 'password123'
 }];
 
@@ -202,18 +202,30 @@ const memes = [
   },
 ];
 
-app.get('/memes', (req, res) => {
-  const searchTerm = req.query.searchTerm;
+app.post('/memes', (req, res) => {
+  const { group, searchTerm } = req.body;
+  let filteredMemes = memes;
+
   if (searchTerm) {
-    const filteredMemes = memes.filter(meme => 
+    filteredMemes = filteredMemes.filter(meme =>
       meme.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-    res.json(filteredMemes);
-  } else {
-    res.json(memes);
   }
+
+  res.json(filteredMemes);
 });
+
 
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
+});
+
+
+app.get('/friend_requests/:email', (req, res) => {
+    const { email } = req.params;
+    if (userFriends[email]) {
+      res.json(convertToNameObjects(userFriends[email]));
+    } else {
+      res.status(404).json({ error: 'No friend requests found for this email' });
+    }
 });

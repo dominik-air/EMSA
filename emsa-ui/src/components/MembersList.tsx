@@ -24,16 +24,21 @@ interface Friend {
   name: string;
 }
 
-const MembersList: React.FC = () => {
+interface MembersListProps {
+  currentGroup: string;
+  userEmail: string;
+}
+
+const MembersList: React.FC<MembersListProps> = ({
+  currentGroup,
+  userEmail,
+}) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  // TODO: pass these as an argument to MemberList?
-  const currentGroup: string = "kociaki";
-  const userEmail: string = "email@example.com";
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -52,7 +57,7 @@ const MembersList: React.FC = () => {
 
     fetchMembers();
     fetchFriends();
-  }, [API_URL]);
+  }, [API_URL, currentGroup, userEmail]);
 
   const handleAddNewMember = () => {
     setAddMemberDialogOpen(true);

@@ -13,20 +13,24 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
-const GroupList: React.FC = () => {
+interface GroupListProps {
+  userEmail: string;
+  onGroupClick: (group: string) => void;
+}
+
+const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
   const [groups, setGroups] = useState<string[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
-  const [email] = useState("email@example.com");
 
   useEffect(() => {
     fetchUserGroups();
-  });
+  }, [userEmail]);
 
   const fetchUserGroups = () => {
     axios
-      .get(`${API_URL}/user_groups/${email}`)
+      .get(`${API_URL}/user_groups/${userEmail}`)
       .then((response) => {
         setGroups(response.data.groups);
       })
@@ -44,14 +48,14 @@ const GroupList: React.FC = () => {
     setOpen(false);
   };
 
-  const handleGroupClick = (group: string) => {
-    console.log(`Redirecting to the ${group}'s Homepage!`);
+  const handleGroupClickInternal = (group: string) => {
+    onGroupClick(group);
   };
 
   const handleCreateGroup = () => {
     axios
       .post(`${API_URL}/user_groups`, {
-        email: email,
+        email: userEmail,
         group_name: newGroupName,
       })
       .then((response) => {
@@ -88,7 +92,7 @@ const GroupList: React.FC = () => {
             >
               <ListItemButton
                 sx={{ textAlign: "center", justifyContent: "center" }}
-                onClick={() => handleGroupClick(group)}
+                onClick={() => handleGroupClickInternal(group)}
               >
                 {group}
               </ListItemButton>

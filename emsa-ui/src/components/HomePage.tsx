@@ -1,27 +1,41 @@
-import { ThemeProvider } from "@mui/material/styles";
+import React, { useState } from "react";
 import {
+  ThemeProvider,
   CssBaseline,
   Box,
   AppBar,
   Toolbar,
   Drawer,
   Button,
-  Typography,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import useCustomTheme from "./Theme";
 import { useAuth } from "./useAuth";
 import GroupList from "./GroupList";
-import MembersList from "./MembersList";
 import ManageMemes from "./ManageMemes";
+import MembersList from "./MembersList";
+import FriendRequests from "./FriendRequests";
 import logo from "../assets/emsa-logo.png";
 
 export default function HomePage() {
-  const { logout } = useAuth();
+  const { logout, email } = useAuth();
   const drawerWidth = 240;
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [activeGroup, setActiveGroup] = useState<string | null>("null");
 
   const handleLogout = () => {
     logout();
   };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
+  };
+
+  const handleGroupClick = (group: string) => {
+    setActiveGroup(group);
+  };
+
   return (
     <ThemeProvider theme={useCustomTheme()}>
       <CssBaseline />
@@ -41,51 +55,67 @@ export default function HomePage() {
                 objectFit: "cover",
               }}
             />
+            <Tabs
+              value={selectedTab}
+              onChange={handleTabChange}
+              aria-label="main tabs"
+              indicatorColor="secondary"
+              textColor="secondary"
+              sx={{ marginLeft: 2 }}
+            >
+              <Tab label="Memes" />
+              <Tab label="Friends" />
+            </Tabs>
           </Box>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Group name
-          </Typography>
-          <Button color="inherit" onClick={() => handleLogout()}>
+          <Button color="inherit" onClick={handleLogout}>
             Logout
           </Button>
         </Toolbar>
       </AppBar>
-      <Box sx={{ display: "flex" }}>
-        <Drawer
-          variant="permanent"
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            [`& .MuiDrawer-paper`]: {
-              width: drawerWidth,
-              boxSizing: "border-box",
-              bgcolor: "background.paper",
-            },
-          }}
-        >
-          <Toolbar />
-          <GroupList />
-        </Drawer>
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <Toolbar />
-          <ManageMemes />
-        </Box>
-        <Drawer
-          variant="permanent"
-          anchor="right"
-          sx={{
-            width: drawerWidth,
-            flexShrink: 0,
-            [`& .MuiDrawer-paper`]: {
-              width: drawerWidth,
-              boxSizing: "border-box",
-              bgcolor: "background.paper",
-            },
-          }}
-        >
-          <Toolbar />
-          <MembersList />
-        </Drawer>
+      <Box sx={{ display: "flex", pt: 5 }}>
+        {selectedTab === 0 && (
+          <>
+            <Drawer
+              variant="permanent"
+              sx={{
+                width: drawerWidth,
+                flexShrink: 0,
+                [`& .MuiDrawer-paper`]: {
+                  width: drawerWidth,
+                  boxSizing: "border-box",
+                  bgcolor: "background.paper",
+                },
+              }}
+            >
+              <Toolbar />
+              <GroupList userEmail={email} onGroupClick={handleGroupClick} />
+            </Drawer>
+            <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+              <ManageMemes currentGroup={activeGroup} />
+            </Box>
+            <Drawer
+              variant="permanent"
+              anchor="right"
+              sx={{
+                width: drawerWidth,
+                flexShrink: 0,
+                [`& .MuiDrawer-paper`]: {
+                  width: drawerWidth,
+                  boxSizing: "border-box",
+                  bgcolor: "background.paper",
+                },
+              }}
+            >
+              <Toolbar />
+              <MembersList currentGroup={activeGroup} userEmail={email} />
+            </Drawer>
+          </>
+        )}
+        {selectedTab === 1 && (
+          <Box sx={{ flexGrow: 1, p: 3 }}>
+            <FriendRequests userEmail={email} />
+          </Box>
+        )}
       </Box>
     </ThemeProvider>
   );
