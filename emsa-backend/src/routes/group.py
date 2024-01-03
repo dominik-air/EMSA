@@ -5,10 +5,89 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.crud.group import GroupCRUD
 from src.crud.media import MediaCRUD
 from src.crud.user import FriendCRUD
-from src.database.schemas import GroupGet, MediaGet, MediaQuery, PublicUser
+from src.database.schemas import GroupCreate, GroupGet, MediaGet, MediaQuery, PublicUser
 from src.database.session import get_db
 
 router = APIRouter()
+
+
+@router.post(
+    "/create_group",
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new group",
+    description="Create a new group provided with a name and related owner user.",
+    response_model=GroupGet,
+    responses={
+        status.HTTP_201_CREATED: {
+            "description": "Group created successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Invalid input",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def create_group(
+    group_info: GroupCreate,
+    db: AsyncSession = Depends(get_db),
+) -> GroupGet:
+    try:
+        group = await GroupCRUD.create_group(group_info, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    return group
+
+
+@router.post(
+    "/add_group_members",
+    status_code=status.HTTP_200_OK,
+    summary="Add members to a group",
+    description="Add members through list of emails related to app users to an existing group by group_id.",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Members added successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Group not found",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def add_group_members(
+    group_id: int, members: list[EmailStr], db: AsyncSession = Depends(get_db)
+) -> None:
+    try:
+        await GroupCRUD.add_users_to_group(group_id, members, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.delete(
+    "/remove_member",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a member from a group",
+    description="Remove a member from an existing group by group_id.",
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Member removed successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Group or member not found",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def remove_member(
+    group_id: int, member_mail: EmailStr, db: AsyncSession = Depends(get_db)
+) -> None:
+    try:
+        await GroupCRUD.remove_user_from_group(group_id, member_mail, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.get(
@@ -122,3 +201,31 @@ async def group_content(
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.delete(
+    "/remove_group",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a group",
+    description="Remove an existing group by group_id.",
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Group removed successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Group not found",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def remove_group(
+    group_id: int,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    try:
+        await GroupCRUD.get_group(group_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    await GroupCRUD.delete_group(group_id, db)
