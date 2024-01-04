@@ -8,6 +8,71 @@ from src.tests.conftest import USER_1, USER_2, USER_3, USER_4
 
 
 @pytest.mark.asyncio
+async def test_register(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    user_data = {
+        "mail": "newuser@example.com",
+        "name": "New User",
+        "password": "newpassword",
+    }
+
+    response = await client.post("/register", json=user_data)
+    response_data = response.json()
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response_data["mail"] == user_data["mail"]
+    assert response_data["name"] == user_data["name"]
+
+
+@pytest.mark.asyncio
+async def test_login(client: AsyncClient, db_session: AsyncSession, advanced_use_case):
+    user_data = {
+        "mail": "newuser@example.com",
+        "name": "New User",
+        "password": "newpassword",
+    }
+
+    await client.post("/register", json=user_data)
+    del user_data["name"]
+    response = await client.post("/login", json=user_data)
+    response_data = response.json()
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert "access_token" in response_data
+    assert response_data["token_type"] == "bearer"
+
+
+@pytest.mark.asyncio
+async def test_register_conflict(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    user_data = {
+        "mail": USER_1.mail,
+        "name": "New User",
+        "password": "newpassword",
+    }
+
+    response = await client.post("/register", json=user_data)
+
+    assert response.status_code == status.HTTP_409_CONFLICT
+
+
+@pytest.mark.asyncio
+async def test_login_bad_request(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    user_data = {
+        "mail": "nonexistentuser@example.com",
+        "password": "invalidpassword",
+    }
+
+    response = await client.post("/login", json=user_data)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.asyncio
 async def test_remove_account(client: AsyncClient, advanced_use_case, db_session):
     user_to_delete = advanced_use_case["user_ids"][1]
     users_before = await UserCRUD.get_users(db_session)

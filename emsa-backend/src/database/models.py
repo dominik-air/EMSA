@@ -14,7 +14,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, array
 from sqlalchemy.orm import relationship
-from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.database.session import Base
 
@@ -50,14 +49,6 @@ class User(Base, TimestampMixin):
     owned_groups: list["Group"] = relationship(
         "Group", back_populates="owner", uselist=True
     )
-
-    def set_password(self, password: str) -> None:
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password: str) -> bool:
-        if self.password_hash is None:
-            return False
-        return check_password_hash(self.password_hash, password)
 
     def __repr__(self) -> str:
         return f"<User(user_mail={self.mail}, username={self.name})>"

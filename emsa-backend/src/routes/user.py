@@ -1,29 +1,145 @@
+from datetime import timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.authorization import (
+    authenticate_user,
+    create_access_token,
+    get_current_active_user,
+    get_password_hash,
+)
 from src.crud.group import GroupCRUD
 from src.crud.user import FriendCRUD, UserCRUD
-from src.database.schemas import PrivateUser, PublicUser, UpdateUser
+from src.database.schemas import (
+    LoginRequest,
+    PrivateUser,
+    PublicUser,
+    RegisterRequest,
+    Token,
+    UpdateUser,
+)
 from src.database.session import get_db
+from src.exceptions import IncorrectUsernameOrPassword
+from src.settings import settings
 
 router = APIRouter()
 
 
-@router.post("/register")
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
+    summary="Register user",
+    description="Register a new user.",
+    response_model=PublicUser,
+    responses={
+        status.HTTP_201_CREATED: {
+            "description": "User registered successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Bad request",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_409_CONFLICT: {
+            "description": "User already exists",
+            "content": {"application/json": {}},
+        },
+    },
+)
 async def register(
-    mail: EmailStr, name: str, password_hash: str, db: AsyncSession = Depends(get_db)
-):
-    # TODO: change this code in issue-31 (it was added just for local development)
-    user_data = PrivateUser(mail=mail, name=name, password_hash=password_hash)
-    user = await UserCRUD.create_user(user_data, db)
+    user_data: RegisterRequest,
+    db: AsyncSession = Depends(get_db),
+) -> PublicUser:
+    try:
+        user = await UserCRUD.get_user(user_data.mail, db)
+    except ValueError:
+        user = None
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
+        )
 
-    return user.model_dump()
+    password_hash = get_password_hash(user_data.password)
+    user_db_data = PrivateUser(
+        **user_data.model_dump(exclude={"password"}), password_hash=password_hash
+    )
+
+    try:
+        user = await UserCRUD.create_user(user_db_data, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    return PublicUser(**user.model_dump())
 
 
-@router.post("/login")
-async def login():
-    pass
+@router.post(
+    "/login",
+    status_code=status.HTTP_201_CREATED,
+    summary="Register user",
+    description="Register a new user.",
+    response_model=Token,
+    responses={
+        status.HTTP_201_CREATED: {
+            "description": "User registered successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Incorrect username or password or user does not exist",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def login(
+    request: LoginRequest,
+    db: AsyncSession = Depends(get_db),
+) -> Token:
+    try:
+        await UserCRUD.get_user(request.mail, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    try:
+        user = await authenticate_user(request.mail, request.password, db)
+    except IncorrectUsernameOrPassword as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=e.detail,
+        )
+
+    access_token_expires = timedelta(minutes=settings.AUTH_TOKEN_EXPIRE_MIN)
+    access_token = create_access_token(
+        data={"sub": user.mail},
+        expires_delta=access_token_expires,
+    )
+    return Token(**{"access_token": access_token, "token_type": "bearer"})
+
+
+@router.get("/users/me", response_model=PublicUser)
+async def read_users_me(current_user: PublicUser = Depends(get_current_active_user)):
+    return current_user
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Logout user",
+    description="Logout the user by invalidating the access token.",
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "User logged out successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized or invalid token",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def logout(
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    return None
 
 
 @router.put(

@@ -15,6 +15,24 @@ class UpdateUser(BaseModel):
     password_hash: str | None = None
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_mail: EmailStr
+
+
+class LoginRequest(BaseModel):
+    mail: EmailStr
+    password: str
+
+
+class RegisterRequest(LoginRequest):
+    name: str = ""
+
+
 class FriendshipCreate(BaseModel):
     user_mail: EmailStr
     friend_mail: EmailStr
