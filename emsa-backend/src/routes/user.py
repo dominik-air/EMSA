@@ -108,11 +108,12 @@ async def login(
         )
 
     access_token_expires = timedelta(minutes=settings.AUTH_TOKEN_EXPIRE_MIN)
-    access_token = create_access_token(
+    access_token = await create_access_token(
         data={"sub": user.mail},
+        db=db,
         expires_delta=access_token_expires,
     )
-    return Token(**{"access_token": access_token, "token_type": "bearer"})
+    return Token(**{"access_token": access_token})
 
 
 @router.get("/users/me", response_model=PublicUser)
@@ -138,8 +139,9 @@ async def read_users_me(current_user: PublicUser = Depends(get_current_active_us
 )
 async def logout(
     db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
 ) -> None:
-    return None
+    await UserCRUD.deactivate_token(current_user, db)
 
 
 @router.put(
@@ -160,12 +162,12 @@ async def logout(
     },
 )
 async def update_account(
-    mail: EmailStr,
     update_data: UpdateUser,
     db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
 ) -> PublicUser:
     try:
-        updated_user = await UserCRUD.update_user(mail, update_data, db)
+        updated_user = await UserCRUD.update_user(current_user.mail, update_data, db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -189,23 +191,23 @@ async def update_account(
     },
 )
 async def remove_account(
-    mail: EmailStr,
     db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
 ) -> None:
     try:
-        await UserCRUD.get_user(mail, db)
+        await UserCRUD.get_user(current_user.mail, db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
-    user_groups = await GroupCRUD.get_user_groups(mail, db)
-    owned_groups = await GroupCRUD.get_user_owned_groups(mail, db)
+    user_groups = await GroupCRUD.get_user_groups(current_user.mail, db)
+    owned_groups = await GroupCRUD.get_user_owned_groups(current_user.mail, db)
     for owned_group_id in [group.id for group in owned_groups]:
         await GroupCRUD.delete_group(owned_group_id, db)
     for user_group_id in [
         group.id for group in user_groups if group not in owned_groups
     ]:
-        await GroupCRUD.remove_user_from_group(user_group_id, mail, db)
-    await UserCRUD.delete_user(mail, db)
+        await GroupCRUD.remove_user_from_group(user_group_id, current_user.mail, db)
+    await UserCRUD.delete_user(current_user.mail, db)
 
 
 @router.post(
@@ -225,10 +227,12 @@ async def remove_account(
     },
 )
 async def add_friend(
-    user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession = Depends(get_db)
+    friend_mail: EmailStr,
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
 ) -> None:
     try:
-        await FriendCRUD.add_friend(user_mail, friend_mail, db)
+        await FriendCRUD.add_friend(current_user.mail, friend_mail, db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -254,14 +258,16 @@ async def add_friend(
     },
 )
 async def remove_friend(
-    user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession = Depends(get_db)
+    friend_mail: EmailStr,
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
 ) -> None:
-    if not await FriendCRUD.check_if_friends(user_mail, friend_mail, db):
+    if not await FriendCRUD.check_if_friends(current_user.mail, friend_mail, db):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Users are not friends"
         )
     try:
-        await FriendCRUD.remove_friend(user_mail, friend_mail, db)
+        await FriendCRUD.remove_friend(current_user.mail, friend_mail, db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -283,7 +289,8 @@ async def remove_friend(
     },
 )
 async def user_friends(
-    user_mail: EmailStr, db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
 ) -> list[PublicUser]:
-    user = await UserCRUD.get_user(user_mail, db)
+    user = await UserCRUD.get_user(current_user.mail, db)
     return await FriendCRUD.get_user_friends(user.mail, db)

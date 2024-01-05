@@ -17,15 +17,17 @@ from src.settings import settings
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def verify_password(hashed_password, plain_password):
+def verify_password(hashed_password: str, plain_password: str):
     return check_password_hash(pwhash=hashed_password, password=plain_password)
 
 
-def get_password_hash(password):
+def get_password_hash(password: str):
     return generate_password_hash(password)
 
 
-async def authenticate_user(mail: EmailStr, password: str, db) -> PrivateUser:
+async def authenticate_user(
+    mail: EmailStr, password: str, db: AsyncSession
+) -> PrivateUser:
     user = await UserCRUD.get_user(mail, db)
     if not user:
         raise IncorrectUsernameOrPassword
@@ -34,18 +36,23 @@ async def authenticate_user(mail: EmailStr, password: str, db) -> PrivateUser:
     return user
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+async def create_access_token(
+    data: dict, db: AsyncSession, expires_delta: timedelta | None = None
+) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now() + expires_delta
     else:
         expire = datetime.now() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    return jwt.encode(
+    encoded_jwt = jwt.encode(
         to_encode,
         key=settings.AUTH_SECRET_KEY,
         algorithm=settings.AUTH_ALGORITHM,
     )
+
+    token = await UserCRUD.create_token(encoded_jwt, db)
+    return token.access_token
 
 
 def decode_jwt_token(token: str) -> dict[str, Any]:
@@ -70,15 +77,21 @@ async def get_current_user(
         payload = jwt.decode(
             token, key=settings.AUTH_SECRET_KEY, algorithms=[settings.AUTH_ALGORITHM]
         )
-        username: str = payload.get("sub")
-        if username is None:
+        user_mail: str = payload.get("sub")
+        if not user_mail:
             raise credentials_exception
-        token_data = TokenData(user_mail=username)
+        token_data = TokenData(user_mail=user_mail)
     except JWTError:
         raise credentials_exception
-    user = await UserCRUD.get_user(token_data.user_mail, db)
-    if user is None:
+    try:
+        user = await UserCRUD.get_user(token_data.user_mail, db)
+    except ValueError:
         raise credentials_exception
+
+    db_token = await UserCRUD.get_token(user.mail, db)
+    if not db_token or not db_token.is_active or db_token.access_token != token:
+        raise credentials_exception
+
     return user
 
 

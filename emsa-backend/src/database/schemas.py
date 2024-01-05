@@ -17,7 +17,16 @@ class UpdateUser(BaseModel):
 
 class Token(BaseModel):
     access_token: str
-    token_type: str
+    token_type: str = "bearer"
+
+
+class TokenCreate(Token):
+    is_active: bool
+    user_mail: EmailStr
+
+
+class TokenGet(TokenCreate):
+    ...
 
 
 class TokenData(BaseModel):

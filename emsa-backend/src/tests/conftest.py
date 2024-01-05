@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import sessionmaker
 
+from src.authorization import create_access_token
 from src.crud.group import GroupCRUD
 from src.crud.media import MediaCRUD
 from src.crud.user import FriendCRUD, UserCRUD
@@ -218,3 +219,35 @@ async def advanced_use_case(db_session: AsyncSession) -> dict:
         "group_ids": [group_1.id, group_2.id],
         "media_ids": [media_1.id, media_2.id, media_3.id, media_4.id],
     }
+
+
+async def headers_for_user1(db_session) -> dict:
+    access_token = await create_access_token(
+        data={"sub": USER_1.mail},
+        db=db_session,
+    )
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+async def headers_for_user2(db_session) -> dict:
+    access_token = await create_access_token(
+        data={"sub": USER_2.mail},
+        db=db_session,
+    )
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+async def headers_for_user3(db_session) -> dict:
+    access_token = await create_access_token(
+        data={"sub": USER_3.mail},
+        db=db_session,
+    )
+    return {"Authorization": f"Bearer {access_token}"}
+
+
+async def headers_for_user4(db_session) -> dict:
+    access_token = await create_access_token(
+        data={"sub": USER_4.mail},
+        db=db_session,
+    )
+    return {"Authorization": f"Bearer {access_token}"}

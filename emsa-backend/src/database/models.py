@@ -49,6 +49,7 @@ class User(Base, TimestampMixin):
     owned_groups: list["Group"] = relationship(
         "Group", back_populates="owner", uselist=True
     )
+    token: "Token" = relationship("Token", back_populates="user")
 
     def __repr__(self) -> str:
         return f"<User(user_mail={self.mail}, username={self.name})>"
@@ -58,6 +59,30 @@ class User(Base, TimestampMixin):
             "mail": self.mail,
             "password_hash": self.password_hash,
             "name": self.name,
+        }
+
+
+class Token(Base):
+    __tablename__ = "tokens"
+
+    access_token = Column(String(450), primary_key=True)
+    is_active = Column(Boolean, nullable=False, default=False)
+    user_mail = Column(String(64), ForeignKey("users.mail"))
+    user: "User" = relationship("User", back_populates="token")
+
+    def __repr__(self) -> str:
+        return (
+            f"<Token("
+            f"access_token={self.access_token}, "
+            f"is_active={self.is_active}, "
+            f"user_mail={self.user_mail})>"
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "access_token": self.access_token,
+            "is_active": self.is_active,
+            "user_mail": self.user_mail,
         }
 
 

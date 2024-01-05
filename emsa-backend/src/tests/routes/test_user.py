@@ -4,7 +4,14 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import FriendCRUD, UserCRUD
-from src.tests.conftest import USER_1, USER_2, USER_3, USER_4
+from src.tests.conftest import (
+    USER_1,
+    USER_2,
+    USER_3,
+    USER_4,
+    headers_for_user1,
+    headers_for_user2,
+)
 
 
 @pytest.mark.asyncio
@@ -45,7 +52,9 @@ async def test_login(client: AsyncClient, db_session: AsyncSession, advanced_use
 
 @pytest.mark.asyncio
 async def test_register_conflict(
-    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
 ):
     user_data = {
         "mail": USER_1.mail,
@@ -60,7 +69,9 @@ async def test_register_conflict(
 
 @pytest.mark.asyncio
 async def test_login_bad_request(
-    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
 ):
     user_data = {
         "mail": "nonexistentuser@example.com",
@@ -77,7 +88,10 @@ async def test_remove_account(client: AsyncClient, advanced_use_case, db_session
     user_to_delete = advanced_use_case["user_ids"][1]
     users_before = await UserCRUD.get_users(db_session)
 
-    response = await client.delete(f"/remove_account?mail={user_to_delete}")
+    response = await client.delete(
+        "/remove_account",
+        headers=await headers_for_user2(db_session),
+    )
     users_after = await UserCRUD.get_users(db_session)
 
     assert user_to_delete in [user.mail for user in users_before]
@@ -92,8 +106,9 @@ async def test_update_account(client: AsyncClient, advanced_use_case, db_session
     update_data = {"name": "UpdatedName", "password_hash": "UpdatedPassword"}
 
     response = await client.put(
-        f"/update_account?mail={user_to_update}",
+        "/update_account",
         json=update_data,
+        headers=await headers_for_user1(db_session),
     )
     response_data = response.json()
     updated_user = await UserCRUD.get_user(user_to_update, db_session)
@@ -111,7 +126,8 @@ async def test_add_friend(
 ):
     friends_before = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
     response = await client.post(
-        f"/add_friend?user_mail={USER_1.mail}&friend_mail={USER_4.mail}",
+        f"/add_friend?friend_mail={USER_4.mail}",
+        headers=await headers_for_user1(db_session),
     )
     friends_after = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
 
@@ -126,7 +142,8 @@ async def test_remove_friend(
 ):
     friends_before = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
     response = await client.delete(
-        f"/remove_friend?user_mail={USER_1.mail}&friend_mail={USER_3.mail}",
+        f"/remove_friend?friend_mail={USER_3.mail}",
+        headers=await headers_for_user1(db_session),
     )
     friends_after = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
 
@@ -135,12 +152,19 @@ async def test_remove_friend(
 
 
 @pytest.mark.asyncio
-async def test_get_user_friends(client: AsyncClient, advanced_use_case):
+async def test_get_user_friends(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     expected_friends = [
         {"mail": USER_2.mail, "name": USER_2.name},
         {"mail": USER_3.mail, "name": USER_3.name},
     ]
-    response = await client.get(f"/user_friends?user_mail={USER_1.mail}")
+    response = await client.get(
+        "/user_friends",
+        headers=await headers_for_user1(db_session),
+    )
 
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert response.json() == expected_friends
