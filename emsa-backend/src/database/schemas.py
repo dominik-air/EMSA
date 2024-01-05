@@ -33,15 +33,6 @@ class TokenData(BaseModel):
     user_mail: EmailStr
 
 
-class LoginRequest(BaseModel):
-    mail: EmailStr
-    password: str
-
-
-class RegisterRequest(LoginRequest):
-    name: str = ""
-
-
 class FriendshipCreate(BaseModel):
     user_mail: EmailStr
     friend_mail: EmailStr
@@ -66,6 +57,7 @@ class MediaCreate(BaseModel):
     is_image: bool
     image_path: str = ""
     link: str = ""
+    name: str = ""
     tags: list[str] = []
 
 
@@ -81,6 +73,7 @@ class MediaUpdate(BaseModel):
     is_image: bool | None = None
     image_path: str | None = None
     link: str | None = None
+    name: str | None = None
 
 
 class MediaQuery(BaseModel):

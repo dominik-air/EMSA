@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.cloud.storage import (
+from src.services.cloud_storage import (
     CloudStorage,
     FailedToDeleteImageException,
     FailedToUploadImageException,

@@ -66,6 +66,7 @@ def test_media_create():
     data = {
         "group_id": 1,
         "is_image": True,
+        "name": "abc",
         "image_path": "image.jpg",
         "link": "example.com",
         "tags": ["a", "b", "c"],
@@ -79,6 +80,7 @@ def test_media_list():
         "id": 1,
         "group_id": 1,
         "is_image": True,
+        "name": "abc",
         "image_path": "image.jpg",
         "link": "example.com",
         "tags": ["a", "b", "c"],
@@ -92,6 +94,7 @@ def test_media_get():
         "id": 1,
         "group_id": 1,
         "is_image": True,
+        "name": "abc",
         "image_path": "image.jpg",
         "link": "example.com",
         "tags": ["a", "b", "c"],
@@ -105,6 +108,7 @@ def test_media_update():
         "is_image": False,
         "image_path": "updated_image.jpg",
         "link": "updated_example.com",
+        "name": "new name",
     }
     media_update = MediaUpdate(**data)
     assert media_update.model_dump() == data
