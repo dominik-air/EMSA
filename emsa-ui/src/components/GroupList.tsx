@@ -18,21 +18,37 @@ interface GroupListProps {
   onGroupClick: (group: string) => void;
 }
 
+interface Group {
+  id: number;
+  name: string;
+  owner_mail: string | null;
+};
+
 const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
   const [groups, setGroups] = useState<string[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
+  const headers = {
+    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+  };
 
   useEffect(() => {
     fetchUserGroups();
-  }, [userEmail]);
+    const interval = setInterval(() => {
+      fetchUserGroups();
+    }, 10000); 
+
+    return () => clearInterval(interval);
+  }, []);
+
 
   const fetchUserGroups = () => {
     axios
-      .get(`${API_URL}/user_groups/${encodeURIComponent(userEmail)}`)
+      .get<Group[]>(`${API_URL}/user_groups`, {headers: headers})
       .then((response) => {
-        setGroups(response.data);
+        console.log(response);
+        setGroups(response.data.map(group => group.name));
       })
       .catch((error) => {
         console.error("Error fetching user groups:", error);
@@ -54,17 +70,19 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
   };
 
   const handleCreateGroup = () => {
-    axios
-      .post(`${API_URL}/user_groups`, {
-        email: userEmail,
-        group_name: newGroupName,
-      })
-      .then((response) => {
-        setGroups(response.data.groups);
+    const body = {
+      owner_mail: userEmail,
+      name: newGroupName,
+    };
+
+    axios.post(`${API_URL}/create_group`, body, { headers: headers })
+      .then(response => {
+        console.log('Group created:', response.data);
         setOpen(false);
+        fetchUserGroups();
       })
-      .catch((error) => {
-        console.error(error);
+      .catch(error => {
+        console.error('Error creating group:', error);
       });
   };
 

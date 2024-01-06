@@ -21,20 +21,20 @@ export default function SignUp() {
 
   const HandleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const navigate = useNavigate();
     const data = new FormData(event.currentTarget);
 
     const signUpData = {
-      nickname: data.get("nickname"),
-      email: data.get("email"),
+      name: data.get("nickname"),
+      mail: data.get("email"),
       password: data.get("password"),
     };
-
+localStorage.getItem("sessionToken")
     try {
-      const response = await axios.post(`${API_URL}/signup`, signUpData);
+      const response = await axios.post(`${API_URL}/register`, signUpData);
       if (response.status === 201) {
         setSignupSuccess(true);
-        setTimeout(() => navigate("/signin"), 3000);
+        // const navigate = useNavigate();
+        // setTimeout(() => navigate("/signin"), 3000);
       }
     } catch (error) {
       console.error("Error during sign up", error);

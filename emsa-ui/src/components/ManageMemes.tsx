@@ -71,22 +71,47 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
+
 interface ManageMemesProps {
-  currentGroup: string;
+  groupId: number;
+  groupName: string;
 }
 
-const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
+interface AddLinkRequest {
+  group_id: number;
+  link: string;
+  name: string;
+  tags: string[];
+}
+
+interface MediaInfo {
+  id: number;
+  group_id: number;
+  is_image: boolean;
+  image_path: string;
+  link: string;
+  name: string;
+  tags: string[];
+}
+
+const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [memes, setMemes] = useState<Meme[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [memeSource, setMemeSource] = useState<string>("");
+  const [mediaName, setMediaName] = useState<string>("");
+  const [tags, setTags] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const headers = {
+    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+  };
 
   useEffect(() => {
     const fetchMemes = async () => {
       try {
         const response = await axios.post<Meme[]>(`${API_URL}/memes`, {
-          group: currentGroup,
+          group: groupId,
           searchTerm: searchTerm,
         });
         setMemes(response.data);
@@ -98,7 +123,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
     if (searchTerm) {
       fetchMemes();
     }
-  }, [searchTerm, currentGroup, API_URL]);
+  }, [searchTerm, groupId, API_URL]);
 
   const onDrop = (acceptedFiles: File[]) => {
     setFiles(
@@ -122,7 +147,30 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setFiles([]);
+    setMediaName("");
+    setMemeSource("");
+    setTags("");
   };
+
+  const sendMemeSource = async () => {
+    const linkData: AddLinkRequest = {
+      group_id: groupId,
+      link: memeSource,
+      name: mediaName,
+      tags: tags.split(" "),
+    }
+    try {
+      const response = await axios.post<MediaInfo>(`${API_URL}/add_link`, linkData);
+      console.log(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error:', error.response?.data || error.message);
+      } else {
+        console.error('Unexpected error:', error);
+      }
+    }
+  };
+
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -130,7 +178,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
         variant="h6"
         sx={{ flexGrow: 1, textAlign: "center", margin: 2 }}
       >
-        {currentGroup}
+        {groupName}
       </Typography>
       <AppBar position="static" color="default">
         <Toolbar>
@@ -162,6 +210,8 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
             type="text"
             fullWidth
             variant="standard"
+            value={mediaName}
+            onChange={(e) => setMediaName(e.target.value)}
           />
           <TextField
             margin="dense"
@@ -170,6 +220,18 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
             type="text"
             fullWidth
             variant="standard"
+            value={memeSource}
+            onChange={(e) => setMemeSource(e.target.value)}
+          />
+            <TextField
+            margin="dense"
+            id="tags"
+            label="Tags"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
           />
           <Box
             {...getRootProps()}
@@ -193,6 +255,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
                   </div>
                 ))}
               </Box>
+              
             )}
           </Box>
         </DialogContent>
@@ -200,7 +263,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ currentGroup }) => {
           <Button variant="contained" onClick={handleDialogClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleDialogClose}>
+          <Button variant="contained" onClick={sendMemeSource}>
             Add
           </Button>
         </DialogActions>

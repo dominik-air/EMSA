@@ -21,9 +21,10 @@ export default function SignIn() {
   const loginService = async (username: string, password: string) => {
     try {
       const response = await axios.post(`${API_URL}/login`, {
-        username,
-        password,
+        mail: username,
+        password: password,
       });
+      console.log(response);
       return response.data;
     } catch (error) {
       console.error("Error during login service", error);
@@ -36,9 +37,10 @@ export default function SignIn() {
   const handleLogin = async (username: string, password: string) => {
     try {
       const response = await loginService(username, password);
-      const { token } = response;
+      const { access_token } = response;
+      console.log(access_token);
 
-      login(username, token);
+      login(username, access_token);
       setLoginError("");
     } catch (error) {
       console.error("Login error", error);

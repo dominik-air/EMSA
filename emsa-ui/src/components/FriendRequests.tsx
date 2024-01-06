@@ -15,8 +15,8 @@ import {
 } from "@mui/material";
 
 interface Friend {
-  id: string;
   name: string;
+  mail: string;
 }
 
 interface FriendRequest {
@@ -34,13 +34,14 @@ interface FriendRequestsProps {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [newFriendEmail, setNewFriendEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const headers = {
+    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+  };
 
   useEffect(() => {
     const fetchFriendRequests = async () => {
       try {
-        const friendRequestsResponse = await axios.get<FriendRequest[]>(`${API_URL}/friend_requests`, {
-          params: { user_email: encodeURIComponent(userEmail) }
-        });
+        const friendRequestsResponse = await axios.get<FriendRequest[]>(`${API_URL}/friend_requests`, {headers: headers});
         setFriendRequests(friendRequestsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -55,9 +56,7 @@ interface FriendRequestsProps {
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const friendsResponse = await axios.get<Friend[]>(`${API_URL}/user_friends`, {
-          params: { user_email: encodeURIComponent(userEmail) }
-        });
+        const friendsResponse = await axios.get<Friend[]>(`${API_URL}/user_friends`, {headers: headers});
         setFriends(friendsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -72,9 +71,8 @@ interface FriendRequestsProps {
   const handleSendRequest = async () => {
     try {
       await axios.post(`${API_URL}/add_friend`, {
-        user_email: encodeURIComponent(userEmail),
         friend_email: encodeURIComponent(newFriendEmail),
-      });
+      }, {headers: headers});
       setIsDialogOpen(false);
       setNewFriendEmail("");
     } catch (error) {
@@ -107,7 +105,7 @@ interface FriendRequestsProps {
   const handleRemoveFriend = async (friendEmail: string) => {
     try {
       await axios.delete(`${API_URL}/remove_friend`, {
-        data: { user_email: encodeURIComponent(userEmail), friend_email: encodeURIComponent(friendEmail) },
+        data: { friend_email: encodeURIComponent(friendEmail) },
       });
       setFriends(prevFriends => prevFriends.filter(friend => friend.name !== friendEmail));
     } catch (error) {
@@ -178,20 +176,14 @@ interface FriendRequestsProps {
           {friends.length > 0 ? (
             friends.map((friend) => (
               <ListItem
-                key={friend.id}
+                key={friend.name}
                 sx={{ justifyContent: "space-between", display: "flex" }}
               >
                 <Typography variant="subtitle1">{friend.name}</Typography>
                 <Button
                   variant="contained"
                   color="secondary"
-<<<<<<< HEAD
                   onClick={() => handleRemoveFriend(friend.name)} 
-=======
-                  onClick={() => {
-                    /* handle remove friend */
-                  }}
->>>>>>> baad969 (frontend kinda works now)
                 >
                   Remove
                 </Button>

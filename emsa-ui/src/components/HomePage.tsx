@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   ThemeProvider,
   CssBaseline,
@@ -18,11 +19,21 @@ import MembersList from "./MembersList";
 import FriendRequests from "./FriendRequests";
 import logo from "../assets/emsa-logo.png";
 
+interface Group {
+  id: number;
+  name: string;
+  owner_mail: string;
+};
+
 export default function HomePage() {
+  const API_URL = import.meta.env.VITE_API_URL;
   const { logout, email } = useAuth();
   const drawerWidth = 240;
   const [selectedTab, setSelectedTab] = useState(0);
-  const [activeGroup, setActiveGroup] = useState<string | null>("null");
+  const [activeGroup, setActiveGroup] = useState<Group | null>(null);
+  const headers = {
+    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+  };
 
   const handleLogout = () => {
     logout();
@@ -32,9 +43,26 @@ export default function HomePage() {
     setSelectedTab(newValue);
   };
 
-  const handleGroupClick = (group: string) => {
+  const handleGroupClick = (group: Group) => {
     setActiveGroup(group);
   };
+
+  const initActiveGroup = async () => {
+    axios
+    .get(`${API_URL}/user_groups`, {headers: headers})
+    .then((response) => {
+      console.log(response);
+      setActiveGroup(response.data[0]);
+    })
+    .catch((error) => {
+      console.error("Error fetching user groups:", error);
+      setActiveGroup({id:-1, name:"no groups", owner_mail: email});
+    });
+  }
+
+  useEffect(() => {
+    initActiveGroup();
+  }, []);
 
   return (
     <ThemeProvider theme={useCustomTheme()}>
@@ -91,7 +119,7 @@ export default function HomePage() {
               <GroupList userEmail={email} onGroupClick={handleGroupClick} />
             </Drawer>
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-              <ManageMemes currentGroup={activeGroup} />
+              <ManageMemes groupName={activeGroup?.name} groupId={activeGroup?.id} />
             </Box>
             <Drawer
               variant="permanent"
@@ -107,7 +135,7 @@ export default function HomePage() {
               }}
             >
               <Toolbar />
-              <MembersList currentGroup={activeGroup} userEmail={email} />
+              <MembersList groupId={activeGroup?.id} />
             </Drawer>
           </>
         )}
