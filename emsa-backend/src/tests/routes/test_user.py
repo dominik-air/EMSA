@@ -4,6 +4,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import FriendCRUD, UserCRUD
+from src.routes.contracts import AddFriendRequest
 from src.tests.conftest import (
     USER_1,
     USER_2,
@@ -125,8 +126,10 @@ async def test_add_friend(
     client: AsyncClient, db_session: AsyncSession, advanced_use_case
 ):
     friends_before = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
+    body = AddFriendRequest(friend_mail=USER_4.mail)
     response = await client.post(
-        f"/add_friend?friend_mail={USER_4.mail}",
+        "/add_friend",
+        json=body.model_dump(),
         headers=await headers_for_user1(db_session),
     )
     friends_after = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
@@ -142,7 +145,7 @@ async def test_remove_friend(
 ):
     friends_before = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
     response = await client.delete(
-        f"/remove_friend?friend_mail={USER_3.mail}",
+        f"/remove_friend/{USER_3.mail}",
         headers=await headers_for_user1(db_session),
     )
     friends_after = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
