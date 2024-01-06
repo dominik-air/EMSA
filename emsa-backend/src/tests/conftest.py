@@ -201,6 +201,7 @@ async def advanced_use_case(db_session: AsyncSession) -> dict:
     await FriendCRUD.add_friend(user_1.mail, user_2.mail, db_session)
     await FriendCRUD.add_friend(user_1.mail, user_3.mail, db_session)
     await FriendCRUD.add_friend(user_2.mail, user_3.mail, db_session)
+    # user_1 is added while group creation, but it won't be added 2nd time if passed here
     await GroupCRUD.add_users_to_group(
         group_1.id, [user_1.mail, user_2.mail, user_3.mail], db_session
     )
