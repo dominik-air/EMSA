@@ -89,7 +89,7 @@ async def test_add_users_to_group_and_get_users(
     )
     users_in_group = await GroupCRUD.get_users_in_group(created_group.id, db_session)
 
-    assert len(users_in_group_before) == 0
+    assert len(users_in_group_before) == 1
     assert len(users_in_group) == 2
     assert user_1.mail and user_2.mail in [user.mail for user in users_in_group]
 

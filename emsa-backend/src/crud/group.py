@@ -1,26 +1,29 @@
+import logging
+
 from pydantic import EmailStr
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, exists, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import UserCRUD
 from src.database.models import Group, Media, User, user_group_association
 from src.database.schemas import GroupCreate, GroupGet, GroupUpdate, PublicUser
 
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
 
 class GroupCRUD:
     @staticmethod
     async def create_group(group: GroupCreate, db: AsyncSession) -> GroupGet:
-        query = (
-            insert(Group)
-            .returning(Group)
-            .values(
-                **group.model_dump(exclude={"owner_mail"}), owner_mail=group.owner_mail
-            )
-        )
+        query = insert(Group).returning(Group).values(**group.model_dump())
         result = await db.execute(query)
         row = result.fetchone()
 
         if row:
+            association_query = user_group_association.insert().values(
+                user_mail=group.owner_mail, group_id=row.id
+            )
+            await db.execute(association_query)
             return GroupGet(**row)
         else:
             raise ValueError("Failed to create group. No row returned.")
@@ -78,10 +81,20 @@ class GroupCRUD:
         db: AsyncSession,
     ) -> None:
         for user_mail in user_mails:
-            query = insert(user_group_association).values(
-                user_mail=user_mail, group_id=group_id
+            membership_query = select(
+                exists().where(
+                    (user_group_association.c.user_mail == user_mail)
+                    & (user_group_association.c.group_id == group_id)
+                )
             )
-            await db.execute(query)
+            is_member = await db.execute(membership_query)
+            is_member = is_member.scalar()
+
+            if not is_member:
+                association_query = insert(user_group_association).values(
+                    user_mail=user_mail, group_id=group_id
+                )
+                await db.execute(association_query)
 
     @staticmethod
     async def get_users_in_group(group_id: int, db: AsyncSession) -> list[PublicUser]:
@@ -95,15 +108,22 @@ class GroupCRUD:
         return [PublicUser(**user[0].to_dict()) for user in users_data]
 
     @staticmethod
-    async def get_user_groups(user_mail: str, db: AsyncSession) -> list[GroupGet]:
+    async def get_user_groups(user_mail: EmailStr, db: AsyncSession) -> list[GroupGet]:
         await UserCRUD.get_user(user_mail, db)
-        query = select(Group).join(User.groups).where(User.mail == user_mail)
+        query = (
+            select(Group)
+            .join(user_group_association)
+            .join(User)
+            .where(User.mail == user_mail)
+        )
         result = await db.execute(query)
         groups = result.fetchall()
         return [GroupGet(**group[0].to_dict()) for group in groups]
 
     @staticmethod
-    async def get_user_owned_groups(user_mail: str, db: AsyncSession) -> list[GroupGet]:
+    async def get_user_owned_groups(
+        user_mail: EmailStr, db: AsyncSession
+    ) -> list[GroupGet]:
         query = select(Group).where(Group.owner_mail == user_mail)
         result = await db.execute(query)
         groups = result.fetchall()
