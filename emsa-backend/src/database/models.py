@@ -130,6 +130,7 @@ class Media(Base, TimestampMixin):
 
     id: int = Column(Integer, primary_key=True)
     group_id: int = Column(Integer, ForeignKey("groups.id"), nullable=False)
+    name: str = Column(String, nullable=False, default="")
     is_image: bool = Column(Boolean, nullable=False)
     image_path: str = Column(String)
     link: str = Column(String)
@@ -145,6 +146,7 @@ class Media(Base, TimestampMixin):
             f"<Media("
             f"id={self.id}, "
             f"group_id={self.group_id}, "
+            f"name={self.name}, "
             f"is_image={self.is_image}, "
             f"image_path={self.image_path}, "
             f"link={self.link}, "
@@ -155,6 +157,7 @@ class Media(Base, TimestampMixin):
         return {
             "id": self.id,
             "group_id": self.group_id,
+            "name": self.name,
             "is_image": self.is_image,
             "image_path": self.image_path,
             "link": self.link,

@@ -32,7 +32,7 @@ router = APIRouter()
 async def create_group(
     group_info: GroupCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: PublicUser = Depends(get_current_active_user),
+    _: PublicUser = Depends(get_current_active_user),
 ) -> GroupGet:
     try:
         group = await GroupCRUD.create_group(group_info, db)
@@ -62,7 +62,7 @@ async def add_group_members(
     group_id: int,
     members: list[EmailStr],
     db: AsyncSession = Depends(get_db),
-    current_user: PublicUser = Depends(get_current_active_user),
+    _: PublicUser = Depends(get_current_active_user),
 ) -> None:
     try:
         await GroupCRUD.add_users_to_group(group_id, members, db)
@@ -90,7 +90,7 @@ async def remove_member(
     group_id: int,
     member_mail: EmailStr,
     db: AsyncSession = Depends(get_db),
-    current_user: PublicUser = Depends(get_current_active_user),
+    _: PublicUser = Depends(get_current_active_user),
 ) -> None:
     try:
         await GroupCRUD.remove_user_from_group(group_id, member_mail, db)
@@ -177,7 +177,7 @@ async def mutual_groups(
 async def group_members(
     group_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: PublicUser = Depends(get_current_active_user),
+    _: PublicUser = Depends(get_current_active_user),
 ) -> list[PublicUser]:
     try:
         return await GroupCRUD.get_users_in_group(group_id, db)
@@ -205,7 +205,7 @@ async def group_content(
     group_id: int,
     search_query: MediaQuery = Depends(),
     db: AsyncSession = Depends(get_db),
-    current_user: PublicUser = Depends(get_current_active_user),
+    _: PublicUser = Depends(get_current_active_user),
 ) -> list[MediaGet]:
     try:
         return await MediaCRUD.get_media_by_group(
@@ -236,7 +236,7 @@ async def group_content(
 async def remove_group(
     group_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: PublicUser = Depends(get_current_active_user),
+    _: PublicUser = Depends(get_current_active_user),
 ) -> None:
     try:
         await GroupCRUD.get_group(group_id, db)

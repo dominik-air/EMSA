@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.database.session import Base, engine
-from src.routes import group, health_check, user
+from src.routes import group, health_check, media, user
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -25,4 +25,5 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(user.router, tags=["user"])
 app.include_router(group.router, tags=["group"])
+app.include_router(media.router, tags=["media"])
 app.include_router(health_check.router, tags=["health"])

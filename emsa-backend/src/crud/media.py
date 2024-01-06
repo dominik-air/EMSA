@@ -62,7 +62,7 @@ class MediaCRUD:
             raise ValueError(f"No media found with ID: {media_id}")
 
     @staticmethod
-    async def delete_media(media_id: int, db: AsyncSession) -> None:
+    async def delete_media_from_db(media_id: int, db: AsyncSession) -> None:
         query = delete(Media).where(Media.id == media_id)
         await db.execute(query)
 

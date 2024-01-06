@@ -25,7 +25,7 @@ from src.database.schemas import (
     PrivateUser,
 )
 from src.database.session import Base, engine, get_db
-from src.routes import group, health_check, user
+from src.routes import group, health_check, media, user
 from src.settings import settings
 
 USER_1 = PrivateUser(mail="abc@gmail.com", name="Dominik", password_hash="321fdas532")
@@ -43,13 +43,19 @@ GROUP_2 = GroupCreate(name="Group 2", owner_mail="bzak@agh.pl")
 TAGS_1 = ["Bike", "FUNNY", "fall"]
 TAGS_2 = ["Travel", "Adventure"]
 
-MEDIA_DATA_1 = {"is_image": True, "image_path": "komixxy.pl", "tags": TAGS_1}
+MEDIA_DATA_1 = {
+    "is_image": True,
+    "image_path": "our-storage.com/1",
+    "tags": TAGS_1,
+    "name": "Old but funny",
+}
 MEDIA_DATA_2 = {
     "is_image": False,
     "link": "tiktok.com/dominik-air",
     "tags": TAGS_1[1::],
+    "name": "Old tiktok star",
 }
-MEDIA_DATA_3 = {"is_image": True, "image_path": "example.com/image", "tags": TAGS_2}
+MEDIA_DATA_3 = {"is_image": True, "image_path": "our-storage.com/2", "tags": TAGS_2}
 MEDIA_DATA_4 = {"is_image": False, "link": "example.com/video", "tags": TAGS_2[1::]}
 
 
@@ -57,6 +63,7 @@ def start_application() -> FastAPI:
     app = FastAPI()
     app.include_router(user.router, tags=["user"])
     app.include_router(group.router, tags=["group"])
+    app.include_router(media.router, tags=["health"])
     app.include_router(health_check.router, tags=["health"])
     return app
 

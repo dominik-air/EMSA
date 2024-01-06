@@ -78,7 +78,7 @@ async def test_media_delete(
     before_deletion_select = await db_session.execute(select(Media))
     before_deletion_count = len(before_deletion_select.fetchall())
 
-    await MediaCRUD.delete_media(media.id, db_session)
+    await MediaCRUD.delete_media_from_db(media.id, db_session)
 
     after_deletion_select = await db_session.execute(select(Media))
     after_deletion_count = len(after_deletion_select.fetchall())

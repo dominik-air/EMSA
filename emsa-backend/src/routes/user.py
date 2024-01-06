@@ -12,16 +12,10 @@ from src.authorization import (
 )
 from src.crud.group import GroupCRUD
 from src.crud.user import FriendCRUD, UserCRUD
-from src.database.schemas import (
-    LoginRequest,
-    PrivateUser,
-    PublicUser,
-    RegisterRequest,
-    Token,
-    UpdateUser,
-)
+from src.database.schemas import PrivateUser, PublicUser, Token, UpdateUser
 from src.database.session import get_db
 from src.exceptions import IncorrectUsernameOrPassword
+from src.routes.contracts import LoginRequest, RegisterRequest
 from src.settings import settings
 
 router = APIRouter()
@@ -114,11 +108,6 @@ async def login(
         expires_delta=access_token_expires,
     )
     return Token(**{"access_token": access_token})
-
-
-@router.get("/users/me", response_model=PublicUser)
-async def read_users_me(current_user: PublicUser = Depends(get_current_active_user)):
-    return current_user
 
 
 @router.post(
