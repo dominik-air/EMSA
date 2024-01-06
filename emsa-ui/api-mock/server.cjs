@@ -8,41 +8,9 @@ const port = 8000;
 app.use(bodyParser.json());
 app.use(cors());
 
-let userGroups = [
-  {
-    email: 'email@example.com',
-    groups: ['kociaki', 'bigos', 'baseniarze'],
-  },
-  {
-    email: 'other@example.com',
-    groups: ['abcd', '1234'],
-  },
-];
-
-app.get('/user_groups/:email', (req, res) => {
-  const { email } = req.params;
-  const userGroup = userGroups.find((group) => group.email === email);
-  if (userGroup) {
-    res.json({ groups: userGroup.groups });
-  } else {
-    res.status(404).json({ error: 'User not found' });
-  }
-});
-
-app.post('/user_groups', (req, res) => {
-  const { email, group_name } = req.body;
-  const userGroup = userGroups.find((group) => group.email === email);
-  if (userGroup) {
-    userGroup.groups.push(group_name);
-    res.json({ groups: userGroup.groups });
-  } else {
-    res.status(404).json({ error: 'User not found' });
-  }
-});
-
 let users = [{
-  username: 'email@example.com',
-  password: 'password123'
+  username: 'bob@example.com',
+  password: 'password'
 }];
 
 app.post('/login', (req, res) => {
@@ -77,143 +45,89 @@ app.post('/signup', (req, res) => {
   res.status(201).json({ message: 'User registered successfully', user: newUser });
 });
 
+
+let friends = {
+  "alice@example.com": ["bob@example.com", "charlie@example.com"],
+  "bob@example.com": ["alice@example.com"]
+};
+
+let groups = {
+  1: { name: "Group One", owner: "alice@example.com" },
+  2: { name: "Group Two", owner: "bob@example.com" }
+};
+
 let groupMembers = {
-  kociaki: ["member A", "member B"],
-  bigos: ["member C"],
-  baseniarze: ["member D", "member E"],
-  abcd: ["member F"],
-  "1234": ["member G", "member H"]
-};
-let userFriends = {
-  'email@example.com': ["friend 1", "friend 2"],
-  'other@example.com': ["friend 3", "friend 4"]
+  1: ["alice@example.com", "bob@example.com"],
+  2: ["bob@example.com", "charlie@example.com"]
 };
 
-const convertToNameObjects = (array) => array.map(name => ({ name }));
+let groupContent = {
+  1: [
+    { type: "image", url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg", tags: ["funny"] },
+    { type: "link", url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg", tags: ["nerd", "cute"] }
+  ],
+  2: [
+    { type: "image", url: "https://fwcdn.pl/ppo/50/13/55013/449913.2.jpg", tags: ["ryan gosling"] }
+  ]
+};
 
-app.get('/friends/:email', (req, res) => {
-  const { email } = req.params;
-  if (userFriends[email]) {
-    res.json(convertToNameObjects(userFriends[email]));
-  } else {
-    res.status(404).json({ error: 'No friends found for this email' });
-  }
+let nextGroupId = 3;
+
+
+app.post('/add_friend', (req, res) => {
+  const { user_email, friend_email } = req.body;
+  friends[user_email] = friends[user_email] || [];
+  friends[user_email].push(friend_email);
+  res.status(200).send();
 });
 
-app.get('/members/:group', (req, res) => {
-  const { group } = req.params;
-  if (groupMembers[group]) {
-    res.json(convertToNameObjects(groupMembers[group]));
-  } else {
-    res.status(404).json({ error: 'No members found for this group' });
-  }
+app.delete('/remove_friend', (req, res) => {
+  const { user_email, friend_email } = req.body;
+  friends[user_email] = friends[user_email].filter(email => email !== friend_email);
+  res.status(200).send();
 });
 
-const memes = [
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "Radek"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "nerd"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "Igor"],
-  },
-  {
-    type: "image",
-    url: "https://cdn1.vectorstock.com/i/1000x1000/60/40/nerd-face-emoji-clever-emoticon-with-glasses-vector-28926040.jpg",
-    tags: ["funny", "Bartosz"],
-  },
-  {
-    type: "image",
-    url: "https://fwcdn.pl/ppo/50/13/55013/449913.2.jpg",
-    tags: ["funny", "Dominik"],
-  },
-];
+app.get('/user_friends', (req, res) => {
+  const user_email = req.query.user_email;
+  res.json(friends[user_email] || []);
+});
 
-app.post('/memes', (req, res) => {
-  const { group, searchTerm } = req.body;
-  let filteredMemes = memes;
+app.post('/create_group', (req, res) => {
+  const { name, owner_mail } = req.body;
+  const groupId = nextGroupId++;
+  groups[groupId] = { name, owner: owner_mail };
+  groupMembers[groupId] = [];
+  res.json({ group_id: groupId });
+});
 
-  if (searchTerm) {
-    filteredMemes = filteredMemes.filter(meme =>
-      meme.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+app.post('/add_group_members', (req, res) => {
+  const { group_id, members } = req.body;
+  groupMembers[group_id] = groupMembers[group_id].concat(members);
+  res.status(200).send();
+});
+
+app.get('/user_groups', (req, res) => {
+  const user_mail = req.query.user_mail;
+  const userGroups = Object.entries(groups).filter(([id, group]) => group.owner === user_mail || groupMembers[id].includes(user_mail));
+  res.json(userGroups.map(([id, group]) => group.name));
+});
+
+app.get('/group_members', (req, res) => {
+  const group_id = parseInt(req.query.group_id);
+  res.json(groupMembers[group_id] || []);
+});
+
+app.get('/group_content', (req, res) => {
+  const { search_term, group_id } = req.query;
+  let content = groupContent[group_id] || [];
+  if (search_term) {
+    content = content.filter(meme =>
+      meme.tags.some(tag => tag.toLowerCase().includes(search_term.toLowerCase()))
     );
   }
-
-  res.json(filteredMemes);
+  res.json(content);
 });
+
 
 
 app.listen(port, () => {
