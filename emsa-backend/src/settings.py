@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     AUTH_SECRET_KEY: str = Field(..., validation_alias="AUTH_SECRET_KEY")
     AUTH_ALGORITHM: str = Field(..., validation_alias="AUTH_ALGORITHM")
+    AUTH_TOKEN_EXPIRE_MIN: int = Field(..., validation_alias="AUTH_TOKEN_EXPIRE_MIN")
 
     @property
     def DATABASE_URL(self) -> str:

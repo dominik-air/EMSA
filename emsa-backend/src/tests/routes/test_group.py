@@ -3,6 +3,7 @@ from unittest.mock import ANY
 import pytest
 from fastapi import status
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.group import GroupCRUD
 from src.tests.conftest import (
@@ -13,28 +14,41 @@ from src.tests.conftest import (
     USER_1,
     USER_2,
     USER_3,
+    USER_4,
+    headers_for_user1,
+    headers_for_user2,
+    headers_for_user4,
 )
 
 
 @pytest.mark.asyncio
-async def test_create_group(client: AsyncClient, advanced_use_case):
+async def test_create_group(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     payload = {"name": "GroupOfUser4", "owner_mail": advanced_use_case["user_ids"][3]}
     expected_group_creation = {
         "id": ANY,
         "name": "GroupOfUser4",
-        "owner_mail": "radek@example.com",
+        "owner_mail": USER_4.mail,
     }
 
     response = await client.post(
-        f"/create_group?name=GroupOfUser4&owner_mail={expected_group_creation['owner_mail']}",
+        "/create_group",
         json=payload,
+        headers=await headers_for_user4(db_session),
     )
     assert response.status_code == status.HTTP_201_CREATED, response.json()
     assert response.json() == expected_group_creation
 
 
 @pytest.mark.asyncio
-async def test_add_group_members(client: AsyncClient, advanced_use_case, db_session):
+async def test_add_group_members(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     group_id = advanced_use_case["group_ids"][1]
     payload = [advanced_use_case["user_ids"][0], advanced_use_case["user_ids"][2]]
     members_before = await GroupCRUD.get_users_in_group(group_id, db_session)
@@ -42,6 +56,7 @@ async def test_add_group_members(client: AsyncClient, advanced_use_case, db_sess
     response = await client.post(
         f"/add_group_members?group_id={group_id}",
         json=payload,
+        headers=await headers_for_user2(db_session),
     )
     members_after = await GroupCRUD.get_users_in_group(group_id, db_session)
 
@@ -53,13 +68,18 @@ async def test_add_group_members(client: AsyncClient, advanced_use_case, db_sess
 
 
 @pytest.mark.asyncio
-async def test_remove_member(client: AsyncClient, advanced_use_case, db_session):
+async def test_remove_member(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     group_id = advanced_use_case["group_ids"][0]
     member_to_delete = advanced_use_case["user_ids"][1]
     members_before = await GroupCRUD.get_users_in_group(group_id, db_session)
 
     response = await client.delete(
-        f"/remove_member?group_id={group_id}&member_mail={member_to_delete}"
+        f"/remove_member?group_id={group_id}&member_mail={member_to_delete}",
+        headers=await headers_for_user1(db_session),
     )
     members_after = await GroupCRUD.get_users_in_group(group_id, db_session)
 
@@ -70,30 +90,46 @@ async def test_remove_member(client: AsyncClient, advanced_use_case, db_session)
 
 
 @pytest.mark.asyncio
-async def test_get_user_groups(client: AsyncClient, advanced_use_case):
+async def test_get_user_groups(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     expected_groups = [
         {"name": GROUP_1.name, "owner_mail": GROUP_1.owner_mail, "id": ANY}
     ]
-    response = await client.get(f"/user_groups?user_mail={USER_1.mail}")
+    response = await client.get(
+        "/user_groups",
+        headers=await headers_for_user1(db_session),
+    )
 
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert response.json() == expected_groups
 
 
 @pytest.mark.asyncio
-async def test_get_mutual_groups(client: AsyncClient, advanced_use_case):
+async def test_get_mutual_groups(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     expected_groups = [
         {"name": GROUP_1.name, "owner_mail": GROUP_1.owner_mail, "id": ANY},
     ]
     response = await client.get(
-        f"/mutual_groups?user_mail={USER_1.mail}&friend_mail={USER_2.mail}"
+        f"/mutual_groups?friend_mail={USER_2.mail}",
+        headers=await headers_for_user1(db_session),
     )
     assert response.status_code == status.HTTP_200_OK
     assert response.json() == expected_groups
 
 
 @pytest.mark.asyncio
-async def test_get_group_members(client: AsyncClient, advanced_use_case):
+async def test_get_group_members(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     group_id = advanced_use_case["group_ids"][0]
     expected_group_members = [
         {"mail": USER_1.mail, "name": USER_1.name},
@@ -101,7 +137,10 @@ async def test_get_group_members(client: AsyncClient, advanced_use_case):
         {"mail": USER_3.mail, "name": USER_3.name},
     ]
 
-    response = await client.get(f"/group_members?group_id={group_id}")
+    response = await client.get(
+        f"/group_members?group_id={group_id}",
+        headers=await headers_for_user1(db_session),
+    )
 
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert response.json() == expected_group_members
@@ -129,18 +168,26 @@ async def test_get_group_content(client: AsyncClient, advanced_use_case, db_sess
         },
     ]
 
-    response = await client.get(f"/group_content?group_id={group_id}")
+    response = await client.get(
+        f"/group_content?group_id={group_id}",
+        headers=await headers_for_user1(db_session),
+    )
 
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert response.json() == expected_group_content
 
 
 @pytest.mark.asyncio
-async def test_group_content_search_term(client: AsyncClient, advanced_use_case):
+async def test_group_content_search_term(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     group_id = advanced_use_case["group_ids"][0]
 
     response = await client.get(
-        f"/group_content?group_id={group_id}&search_term={TAGS_1[0]}"
+        f"/group_content?group_id={group_id}&search_term={TAGS_1[0]}",
+        headers=await headers_for_user1(db_session),
     )
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert len(response.json()) == 1
@@ -148,10 +195,17 @@ async def test_group_content_search_term(client: AsyncClient, advanced_use_case)
 
 
 @pytest.mark.asyncio
-async def test_group_content_no_search_term(client: AsyncClient, advanced_use_case):
+async def test_group_content_no_search_term(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     group_id = advanced_use_case["group_ids"][0]
 
-    response = await client.get(f"/group_content?group_id={group_id}")
+    response = await client.get(
+        f"/group_content?group_id={group_id}",
+        headers=await headers_for_user1(db_session),
+    )
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert len(response.json()) == 2
     assert all(
@@ -161,23 +215,33 @@ async def test_group_content_no_search_term(client: AsyncClient, advanced_use_ca
 
 @pytest.mark.asyncio
 async def test_group_content_nonexistent_search_term(
-    client: AsyncClient, advanced_use_case
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
 ):
     group_id = advanced_use_case["group_ids"][0]
 
     response = await client.get(
-        f"/group_content?group_id={group_id}&search_term=nonexistent"
+        f"/group_content?group_id={group_id}&search_term=nonexistent",
+        headers=await headers_for_user1(db_session),
     )
     assert response.status_code == status.HTTP_200_OK, response.json()
     assert len(response.json()) == 0
 
 
 @pytest.mark.asyncio
-async def test_remove_group(client: AsyncClient, advanced_use_case, db_session):
+async def test_remove_group(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    advanced_use_case,
+):
     group_id_to_delete = advanced_use_case["group_ids"][0]
     groups_before = await GroupCRUD.get_groups(db_session)
 
-    response = await client.delete(f"/remove_group?group_id={group_id_to_delete}")
+    response = await client.delete(
+        f"/remove_group?group_id={group_id_to_delete}",
+        headers=await headers_for_user1(db_session),
+    )
     groups_after = await GroupCRUD.get_groups(db_session)
 
     assert group_id_to_delete in [group.id for group in groups_before]

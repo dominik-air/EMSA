@@ -1,9 +1,18 @@
+from jose import jwt
 from pydantic import EmailStr
 from sqlalchemy import delete, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.models import Friendship, User
-from src.database.schemas import FriendshipCreate, PrivateUser, PublicUser, UpdateUser
+from src.database.models import Friendship, Token, User
+from src.database.schemas import (
+    FriendshipCreate,
+    PrivateUser,
+    PublicUser,
+    TokenCreate,
+    TokenGet,
+    UpdateUser,
+)
+from src.settings import settings
 
 
 class UserCRUD:
@@ -61,7 +70,62 @@ class UserCRUD:
                 or_(Friendship.user_mail == mail, Friendship.friend_mail == mail)
             )
         )
+        await db.execute(delete(Token).where(Token.user_mail == mail))
         await db.execute(delete(User).where(User.mail == mail))
+
+    @staticmethod
+    async def create_token(access_token: str, db: AsyncSession) -> TokenCreate:
+        decoded_token = jwt.decode(
+            access_token, settings.AUTH_SECRET_KEY, algorithms=[settings.AUTH_ALGORITHM]
+        )
+        user_mail = decoded_token["sub"]
+
+        if await UserCRUD.get_token(user_mail, db):
+            await db.execute(delete(Token).where(Token.user_mail == user_mail))
+
+        token_data = TokenCreate(
+            access_token=access_token,
+            user_mail=user_mail,
+            is_active=True,
+        )
+        query = (
+            insert(Token)
+            .returning(Token)
+            .values(token_data.model_dump(exclude={"token_type"}))
+        )
+        result = await db.execute(query)
+        row = result.fetchone()
+
+        if row:
+            return TokenCreate(**row)
+        else:
+            raise ValueError("Failed to create token. No row returned.")
+
+    @staticmethod
+    async def get_token(user_mail: str, db: AsyncSession) -> TokenGet | None:
+        query = select(Token).where(Token.user_mail == user_mail)
+        result = await db.execute(query)
+        token = result.fetchone()
+
+        if token:
+            return TokenGet(**token[0].to_dict())
+        else:
+            return None
+
+    @staticmethod
+    async def deactivate_token(current_user: PublicUser, db: AsyncSession) -> None:
+        result = await db.execute(
+            select(Token).filter(
+                Token.user_mail == current_user.mail,
+            )
+        )
+        current_token = result.scalar()
+        if current_token:
+            await db.execute(
+                update(Token)
+                .where(Token.user_mail == current_user.mail)
+                .values(is_active=False)
+            )
 
 
 class FriendCRUD:

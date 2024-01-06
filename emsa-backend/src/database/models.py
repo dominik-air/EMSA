@@ -14,7 +14,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, array
 from sqlalchemy.orm import relationship
-from werkzeug.security import check_password_hash, generate_password_hash
 
 from src.database.session import Base
 
@@ -50,14 +49,7 @@ class User(Base, TimestampMixin):
     owned_groups: list["Group"] = relationship(
         "Group", back_populates="owner", uselist=True
     )
-
-    def set_password(self, password: str) -> None:
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password: str) -> bool:
-        if self.password_hash is None:
-            return False
-        return check_password_hash(self.password_hash, password)
+    token: "Token" = relationship("Token", back_populates="user")
 
     def __repr__(self) -> str:
         return f"<User(user_mail={self.mail}, username={self.name})>"
@@ -67,6 +59,30 @@ class User(Base, TimestampMixin):
             "mail": self.mail,
             "password_hash": self.password_hash,
             "name": self.name,
+        }
+
+
+class Token(Base):
+    __tablename__ = "tokens"
+
+    access_token = Column(String(450), primary_key=True)
+    is_active = Column(Boolean, nullable=False, default=False)
+    user_mail = Column(String(64), ForeignKey("users.mail"))
+    user: "User" = relationship("User", back_populates="token")
+
+    def __repr__(self) -> str:
+        return (
+            f"<Token("
+            f"access_token={self.access_token}, "
+            f"is_active={self.is_active}, "
+            f"user_mail={self.user_mail})>"
+        )
+
+    def to_dict(self) -> dict:
+        return {
+            "access_token": self.access_token,
+            "is_active": self.is_active,
+            "user_mail": self.user_mail,
         }
 
 
