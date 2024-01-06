@@ -26,19 +26,20 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
 
   useEffect(() => {
     fetchUserGroups();
-  }, [userEmail]);
+  });
 
   const fetchUserGroups = () => {
     axios
-      .get(`${API_URL}/user_groups/${userEmail}`)
+      .get(`${API_URL}/user_groups/${encodeURIComponent(userEmail)}`)
       .then((response) => {
-        setGroups(response.data.groups);
+        setGroups(response.data);
       })
       .catch((error) => {
-        console.error(error);
+        console.error("Error fetching user groups:", error);
         setGroups(["no groups!"]);
       });
   };
+  
 
   const handleAddNewGroup = () => {
     setOpen(true);
