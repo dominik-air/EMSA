@@ -50,6 +50,18 @@ class User(Base, TimestampMixin):
         "Group", back_populates="owner", uselist=True
     )
     token: "Token" = relationship("Token", back_populates="user")
+    # one-to-many relationship with FriendRequest (sent requests)
+    sent_friend_requests: list["FriendRequest"] = relationship(
+        "FriendRequest",
+        foreign_keys="FriendRequest.sender_mail",
+        back_populates="sender",
+    )
+    # one-to-many relationship with FriendRequest (received requests)
+    received_friend_requests: list["FriendRequest"] = relationship(
+        "FriendRequest",
+        foreign_keys="FriendRequest.receiver_mail",
+        back_populates="receiver",
+    )
 
     def __repr__(self) -> str:
         return f"<User(user_mail={self.mail}, username={self.name})>"
@@ -83,6 +95,24 @@ class Token(Base):
             "access_token": self.access_token,
             "is_active": self.is_active,
             "user_mail": self.user_mail,
+        }
+
+
+class FriendRequest(Base, TimestampMixin):
+    __tablename__ = "friend_requests"
+
+    id: int = Column(Integer, primary_key=True)
+    sender_mail: str = Column(String, ForeignKey("users.mail"), nullable=False)
+    receiver_mail: str = Column(String, ForeignKey("users.mail"), nullable=False)
+
+    sender: User = relationship("User", foreign_keys=[sender_mail])
+    receiver: User = relationship("User", foreign_keys=[receiver_mail])
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "sender_mail": self.sender_mail,
+            "receiver_mail": self.receiver_mail,
         }
 
 
