@@ -39,7 +39,6 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   };
 
   const fetchFriendRequests = async () => {
-    return;
     try {
       const friendRequestsResponse = await axios.get<FriendRequest[]>(
         `${API_URL}/friend_requests`,

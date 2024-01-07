@@ -169,7 +169,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
       ))}
     </FormGroup>
         </DialogContent>
-        <DialogActions>g
+        <DialogActions>
           <Button variant="contained" onClick={handleCloseAddMemberDialog}>
             Cancel
           </Button>
