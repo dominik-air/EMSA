@@ -25,23 +25,26 @@ interface FriendRequest {
 }
 
 interface FriendRequestsProps {
-    userEmail: string;
-  }
+  userEmail: string;
+}
 
-  const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
+const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [newFriendEmail, setNewFriendEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const headers = {
-    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
   const fetchFriendRequests = async () => {
     return;
     try {
-      const friendRequestsResponse = await axios.get<FriendRequest[]>(`${API_URL}/friend_requests`, {headers: headers});
+      const friendRequestsResponse = await axios.get<FriendRequest[]>(
+        `${API_URL}/friend_requests`,
+        { headers: headers },
+      );
       setFriendRequests(friendRequestsResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -50,13 +53,16 @@ interface FriendRequestsProps {
 
   useEffect(() => {
     if (userEmail) {
-        fetchFriendRequests();
+      fetchFriendRequests();
     }
-  }, [API_URL, userEmail]);
+  });
 
   const fetchFriends = async () => {
     try {
-      const friendsResponse = await axios.get<Friend[]>(`${API_URL}/user_friends`, {headers: headers});
+      const friendsResponse = await axios.get<Friend[]>(
+        `${API_URL}/user_friends`,
+        { headers: headers },
+      );
       setFriends(friendsResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -65,15 +71,19 @@ interface FriendRequestsProps {
 
   useEffect(() => {
     if (userEmail) {
-        fetchFriends();
+      fetchFriends();
     }
-  }, [API_URL, userEmail]);
+  });
 
   const handleSendRequest = async () => {
     try {
-      await axios.post(`${API_URL}/add_friend`, {
-        friend_mail: newFriendEmail,
-      }, {headers: headers});
+      await axios.post(
+        `${API_URL}/add_friend`,
+        {
+          friend_mail: newFriendEmail,
+        },
+        { headers: headers },
+      );
       setIsDialogOpen(false);
       setNewFriendEmail("");
       await fetchFriends();
@@ -85,7 +95,7 @@ interface FriendRequestsProps {
   const handleOpenFriendRequestDialog = async () => {
     setIsDialogOpen(true);
     setNewFriendEmail("");
-  }
+  };
 
   const handleAcceptRequest = async (requestId: string) => {
     try {
@@ -107,8 +117,13 @@ interface FriendRequestsProps {
 
   const handleRemoveFriend = async (friendEmail: string) => {
     try {
-      await axios.delete(`${API_URL}/remove_friend/${encodeURIComponent(friendEmail)}`,  {headers: headers});
-      setFriends(prevFriends => prevFriends.filter(friend => friend.mail !== friendEmail));
+      await axios.delete(
+        `${API_URL}/remove_friend/${encodeURIComponent(friendEmail)}`,
+        { headers: headers },
+      );
+      setFriends((prevFriends) =>
+        prevFriends.filter((friend) => friend.mail !== friendEmail),
+      );
     } catch (error) {
       console.error("Error removing friend:", error);
     }
@@ -124,14 +139,14 @@ interface FriendRequestsProps {
           Friend Requests
         </Typography>
         <Box sx={{ justifyContent: "center", display: "flex" }}>
-        <Button 
-        variant="contained" 
-        color="primary" 
-        onClick={handleOpenFriendRequestDialog}
-        sx={{ mb: 2 }}
-      >
-        Send Friend Request
-      </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleOpenFriendRequestDialog}
+            sx={{ mb: 2 }}
+          >
+            Send Friend Request
+          </Button>
         </Box>
 
         <List>
@@ -147,7 +162,7 @@ interface FriendRequestsProps {
                     variant="contained"
                     color="primary"
                     onClick={() => {
-                      handleAcceptRequest("todo")
+                      handleAcceptRequest("todo");
                     }}
                   >
                     Accept
@@ -157,7 +172,7 @@ interface FriendRequestsProps {
                     color="secondary"
                     sx={{ ml: 1 }}
                     onClick={() => {
-                     handleDeclineRequest("todo")
+                      handleDeclineRequest("todo");
                     }}
                   >
                     Decline
@@ -187,7 +202,7 @@ interface FriendRequestsProps {
                 <Button
                   variant="contained"
                   color="secondary"
-                  onClick={() => handleRemoveFriend(friend.mail)} 
+                  onClick={() => handleRemoveFriend(friend.mail)}
                 >
                   Remove
                 </Button>

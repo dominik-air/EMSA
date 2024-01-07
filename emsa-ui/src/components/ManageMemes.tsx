@@ -71,7 +71,6 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-
 interface ManageMemesProps {
   groupId: number;
   groupName: string;
@@ -104,7 +103,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const headers = {
-    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
   useEffect(() => {
@@ -158,19 +157,22 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
       link: memeSource,
       name: mediaName,
       tags: tags.split(" "),
-    }
+    };
     try {
-      const response = await axios.post<MediaInfo>(`${API_URL}/add_link`, linkData, {headers: headers});
+      const response = await axios.post<MediaInfo>(
+        `${API_URL}/add_link`,
+        linkData,
+        { headers: headers },
+      );
       console.log(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Error:', error.response?.data || error.message);
+        console.error("Error:", error.response?.data || error.message);
       } else {
-        console.error('Unexpected error:', error);
+        console.error("Unexpected error:", error);
       }
     }
   };
-
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -223,7 +225,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
             value={memeSource}
             onChange={(e) => setMemeSource(e.target.value)}
           />
-            <TextField
+          <TextField
             margin="dense"
             id="tags"
             label="Tags"
@@ -255,7 +257,6 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
                   </div>
                 ))}
               </Box>
-              
             )}
           </Box>
         </DialogContent>

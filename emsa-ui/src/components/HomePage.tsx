@@ -23,7 +23,7 @@ interface Group {
   id: number;
   name: string;
   owner_mail: string;
-};
+}
 
 export default function HomePage() {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -32,7 +32,7 @@ export default function HomePage() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [activeGroup, setActiveGroup] = useState<Group | null>(null);
   const headers = {
-    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
   const handleLogout = () => {
@@ -49,16 +49,16 @@ export default function HomePage() {
 
   const initActiveGroup = async () => {
     axios
-    .get(`${API_URL}/user_groups`, {headers: headers})
-    .then((response) => {
-      console.log(response);
-      setActiveGroup(response.data[0]);
-    })
-    .catch((error) => {
-      console.error("Error fetching user groups:", error);
-      setActiveGroup({id:-1, name:"no groups", owner_mail: email});
-    });
-  }
+      .get(`${API_URL}/user_groups`, { headers: headers })
+      .then((response) => {
+        console.log(response);
+        setActiveGroup(response.data[0]);
+      })
+      .catch((error) => {
+        console.error("Error fetching user groups:", error);
+        setActiveGroup({ id: -1, name: "no groups", owner_mail: email });
+      });
+  };
 
   useEffect(() => {
     initActiveGroup();
@@ -119,7 +119,10 @@ export default function HomePage() {
               <GroupList userEmail={email} onGroupClick={handleGroupClick} />
             </Drawer>
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-              <ManageMemes groupName={activeGroup?.name} groupId={activeGroup?.id} />
+              <ManageMemes
+                groupName={activeGroup?.name}
+                groupId={activeGroup?.id}
+              />
             </Box>
             <Drawer
               variant="permanent"

@@ -30,9 +30,7 @@ interface MembersListProps {
   groupId: number;
 }
 
-const MembersList: React.FC<MembersListProps> = ({
-  groupId
-}) => {
+const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
@@ -40,22 +38,22 @@ const MembersList: React.FC<MembersListProps> = ({
   const [friends, setFriends] = useState<Friend[]>([]);
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const headers = {
-    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
-
 
   useEffect(() => {
     const fetchMembers = async () => {
       const response = await axios.get<Member[]>(
-        `${API_URL}/group_members/${groupId}`, {headers: headers}
+        `${API_URL}/group_members/${groupId}`,
+        { headers: headers },
       );
       setMembers(response.data);
     };
 
     const fetchFriends = async () => {
-      const response = await axios.get<Friend[]>(
-        `${API_URL}/user_friends`, {headers: headers}
-      );
+      const response = await axios.get<Friend[]>(`${API_URL}/user_friends`, {
+        headers: headers,
+      });
       setFriends(response.data);
     };
 

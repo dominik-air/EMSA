@@ -22,7 +22,7 @@ interface Group {
   id: number;
   name: string;
   owner_mail: string | null;
-};
+}
 
 const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
   const API_URL = import.meta.env.VITE_API_URL;
@@ -30,32 +30,30 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
   const [groups, setGroups] = useState<string[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
   const headers = {
-    "Authorization": `Bearer ${localStorage.getItem("sessionToken")}` 
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
   useEffect(() => {
     fetchUserGroups();
     const interval = setInterval(() => {
       fetchUserGroups();
-    }, 10000); 
+    }, 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-
   const fetchUserGroups = () => {
     axios
-      .get<Group[]>(`${API_URL}/user_groups`, {headers: headers})
+      .get<Group[]>(`${API_URL}/user_groups`, { headers: headers })
       .then((response) => {
         console.log(response);
-        setGroups(response.data.map(group => group.name));
+        setGroups(response.data.map((group) => group.name));
       })
       .catch((error) => {
         console.error("Error fetching user groups:", error);
         setGroups(["no groups!"]);
       });
   };
-  
 
   const handleAddNewGroup = () => {
     setOpen(true);
@@ -75,14 +73,15 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
       name: newGroupName,
     };
 
-    axios.post(`${API_URL}/create_group`, body, { headers: headers })
-      .then(response => {
-        console.log('Group created:', response.data);
+    axios
+      .post(`${API_URL}/create_group`, body, { headers: headers })
+      .then((response) => {
+        console.log("Group created:", response.data);
         setOpen(false);
         fetchUserGroups();
       })
-      .catch(error => {
-        console.error('Error creating group:', error);
+      .catch((error) => {
+        console.error("Error creating group:", error);
       });
   };
 

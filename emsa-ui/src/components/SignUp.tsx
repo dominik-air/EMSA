@@ -18,6 +18,8 @@ export default function SignUp() {
   const API_URL = import.meta.env.VITE_API_URL;
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [signupError, setSignupError] = useState("");
+  const navigate = useNavigate();
+  const navigateToSignIn = () => navigate("/signin");
 
   const HandleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -28,13 +30,12 @@ export default function SignUp() {
       mail: data.get("email"),
       password: data.get("password"),
     };
-localStorage.getItem("sessionToken")
+    localStorage.getItem("sessionToken");
     try {
       const response = await axios.post(`${API_URL}/register`, signUpData);
       if (response.status === 201) {
         setSignupSuccess(true);
-        // const navigate = useNavigate();
-        // setTimeout(() => navigate("/signin"), 3000);
+        setTimeout(() => navigateToSignIn(), 3000);
       }
     } catch (error) {
       console.error("Error during sign up", error);
