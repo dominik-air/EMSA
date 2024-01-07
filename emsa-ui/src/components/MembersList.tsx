@@ -36,6 +36,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
@@ -76,6 +77,34 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleSelectFriend = (friend: Friend) => {
+    setSelectedFriends(prevSelected => {
+      if (prevSelected.includes(friend)) {
+        return prevSelected.filter(f => f !== friend);
+      } else {
+        return [...prevSelected, friend];
+      }
+    });
+  };
+
+  const addFriendsToGroup = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/add_group_members/${groupId}`, 
+        { members: selectedFriends.map((f) => f.mail) }, 
+        { headers: headers },
+      );
+      console.log(response);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const handleAddFriendsToGroup = async () => {
+    await addFriendsToGroup();
+    handleCloseAddMemberDialog();
   };
 
   return (
@@ -125,21 +154,26 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
       <Dialog open={addMemberDialogOpen} onClose={handleCloseAddMemberDialog}>
         <DialogTitle>Add friend to group</DialogTitle>
         <DialogContent>
-          <FormGroup>
-            {friends.map((friend, index) => (
-              <FormControlLabel
-                key={index}
-                control={<Checkbox />}
-                label={friend.name}
-              />
-            ))}
-          </FormGroup>
+        <FormGroup>
+      {friends.map((friend, index) => (
+        <FormControlLabel
+          key={index}
+          control={
+            <Checkbox
+              onChange={() => handleSelectFriend(friend)}
+              checked={selectedFriends.includes(friend)}
+            />
+          }
+          label={friend.name}
+        />
+      ))}
+    </FormGroup>
         </DialogContent>
-        <DialogActions>
+        <DialogActions>g
           <Button variant="contained" onClick={handleCloseAddMemberDialog}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleCloseAddMemberDialog}>
+          <Button variant="contained" onClick={handleAddFriendsToGroup}>
             Add
           </Button>
         </DialogActions>

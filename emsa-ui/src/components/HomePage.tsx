@@ -50,7 +50,7 @@ export default function HomePage() {
         console.error("Unexpected error:", error);
       }
     }
-  }
+  };
 
   const handleLogout = async () => {
     await callLogout();
