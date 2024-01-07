@@ -117,7 +117,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
   const fetchMemes = async () => {
     try {
       const response = await axios.get<MediaInfo[]>(`${API_URL}/group_content/${groupId}`, {
-        params: {searchTerm: searchTerm}, headers: headers,
+        params: {search_term: searchTerm}, headers: headers,
       });
       setMemes(response.data.map(info => MediaInfoToMeme(info)));
     } catch (error) {
@@ -126,9 +126,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
   };
 
   useEffect(() => {
-    if (searchTerm) {
-      fetchMemes();
-    }
+    fetchMemes();
   }, [searchTerm, groupId, API_URL]);
 
   const onDrop = (acceptedFiles: File[]) => {

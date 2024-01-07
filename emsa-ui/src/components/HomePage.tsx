@@ -35,7 +35,24 @@ export default function HomePage() {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
-  const handleLogout = () => {
+  const callLogout = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/logout`, {},
+        { headers: headers },
+      );
+      console.log(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error:", error.response?.data || error.message);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+    }
+  }
+
+  const handleLogout = async () => {
+    await callLogout()
     logout();
   };
 
