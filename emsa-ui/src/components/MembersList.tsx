@@ -18,41 +18,49 @@ import {
 
 interface Member {
   name: string;
+  mail: string;
 }
 
 interface Friend {
   name: string;
+  mail: string;
 }
 
-const MembersList: React.FC = () => {
+interface MembersListProps {
+  groupId: number;
+}
+
+const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
-  // TODO: pass these as an argument to MemberList?
-  const currentGroup: string = "kociaki";
-  const userEmail: string = "email@example.com";
+  const headers = {
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
+  };
 
   useEffect(() => {
     const fetchMembers = async () => {
       const response = await axios.get<Member[]>(
-        `${API_URL}/members/${currentGroup}`,
+        `${API_URL}/group_members/${groupId}`,
+        { headers: headers },
       );
       setMembers(response.data);
     };
 
     const fetchFriends = async () => {
-      const response = await axios.get<Friend[]>(
-        `${API_URL}/friends/${userEmail}`,
-      );
+      const response = await axios.get<Friend[]>(`${API_URL}/user_friends`, {
+        headers: headers,
+      });
       setFriends(response.data);
     };
 
     fetchMembers();
     fetchFriends();
-  }, [API_URL]);
+  }, [API_URL, groupId]);
 
   const handleAddNewMember = () => {
     setAddMemberDialogOpen(true);
@@ -69,6 +77,34 @@ const MembersList: React.FC = () => {
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleSelectFriend = (friend: Friend) => {
+    setSelectedFriends((prevSelected) => {
+      if (prevSelected.includes(friend)) {
+        return prevSelected.filter((f) => f !== friend);
+      } else {
+        return [...prevSelected, friend];
+      }
+    });
+  };
+
+  const addFriendsToGroup = async () => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/add_group_members/${groupId}`,
+        { members: selectedFriends.map((f) => f.mail) },
+        { headers: headers },
+      );
+      console.log(response);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const handleAddFriendsToGroup = async () => {
+    await addFriendsToGroup();
+    handleCloseAddMemberDialog();
   };
 
   return (
@@ -122,7 +158,12 @@ const MembersList: React.FC = () => {
             {friends.map((friend, index) => (
               <FormControlLabel
                 key={index}
-                control={<Checkbox />}
+                control={
+                  <Checkbox
+                    onChange={() => handleSelectFriend(friend)}
+                    checked={selectedFriends.includes(friend)}
+                  />
+                }
                 label={friend.name}
               />
             ))}
@@ -132,7 +173,7 @@ const MembersList: React.FC = () => {
           <Button variant="contained" onClick={handleCloseAddMemberDialog}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleCloseAddMemberDialog}>
+          <Button variant="contained" onClick={handleAddFriendsToGroup}>
             Add
           </Button>
         </DialogActions>

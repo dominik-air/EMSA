@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Box, Button, AppBar, Toolbar, InputBase } from "@mui/material";
+import {
+  Box,
+  Button,
+  AppBar,
+  Toolbar,
+  InputBase,
+  Typography,
+} from "@mui/material";
 import {
   Dialog,
   DialogTitle,
@@ -64,29 +71,67 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const ManageMemes = () => {
+interface ManageMemesProps {
+  groupId: number;
+  groupName: string;
+}
+
+interface AddLinkRequest {
+  group_id: number;
+  link: string;
+  name: string;
+  tags: string[];
+}
+
+interface MediaInfo {
+  id: number;
+  group_id: number;
+  is_image: boolean;
+  image_path: string;
+  link: string;
+  name: string;
+  tags: string[];
+}
+
+const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [memes, setMemes] = useState<Meme[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [memeSource, setMemeSource] = useState<string>("");
+  const [mediaName, setMediaName] = useState<string>("");
+  const [tags, setTags] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const headers = {
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
+  };
+
+  const MediaInfoToMeme = (info: MediaInfo): Meme => {
+    return {
+      type: info.is_image ? "image" : "link",
+      url: info.is_image ? info.image_path : info.link,
+      tags: info.tags,
+    };
+  };
+
+  const fetchMemes = async () => {
+    try {
+      const response = await axios.get<MediaInfo[]>(
+        `${API_URL}/group_content/${groupId}`,
+        {
+          params: { search_term: searchTerm },
+          headers: headers,
+        },
+      );
+      setMemes(response.data.map((info) => MediaInfoToMeme(info)));
+    } catch (error) {
+      console.error("Error fetching memes:", error);
+    }
+  };
 
   useEffect(() => {
-    const fetchMemes = async () => {
-      try {
-        const response = await axios.get<Meme[]>(
-          `${API_URL}/memes/?searchTerm=${encodeURIComponent(searchTerm)}`,
-        );
-        setMemes(response.data);
-      } catch (error) {
-        console.error("Error fetching memes:", error);
-      }
-    };
-
-    if (searchTerm) {
-      fetchMemes();
-    }
-  }, [searchTerm, API_URL]);
+    fetchMemes();
+  }, [searchTerm, groupId, API_URL]);
 
   const onDrop = (acceptedFiles: File[]) => {
     setFiles(
@@ -110,10 +155,42 @@ const ManageMemes = () => {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setFiles([]);
+    setMediaName("");
+    setMemeSource("");
+    setTags("");
+  };
+
+  const sendMemeSource = async () => {
+    const linkData: AddLinkRequest = {
+      group_id: groupId,
+      link: memeSource,
+      name: mediaName,
+      tags: tags.split(" "),
+    };
+    try {
+      const response = await axios.post<MediaInfo>(
+        `${API_URL}/add_link`,
+        linkData,
+        { headers: headers },
+      );
+      console.log(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error:", error.response?.data || error.message);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+    }
   };
 
   return (
     <Box sx={{ flexGrow: 1 }}>
+      <Typography
+        variant="h6"
+        sx={{ flexGrow: 1, textAlign: "center", margin: 2 }}
+      >
+        {groupName}
+      </Typography>
       <AppBar position="static" color="default">
         <Toolbar>
           <Search>
@@ -144,6 +221,8 @@ const ManageMemes = () => {
             type="text"
             fullWidth
             variant="standard"
+            value={mediaName}
+            onChange={(e) => setMediaName(e.target.value)}
           />
           <TextField
             margin="dense"
@@ -152,6 +231,18 @@ const ManageMemes = () => {
             type="text"
             fullWidth
             variant="standard"
+            value={memeSource}
+            onChange={(e) => setMemeSource(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            id="tags"
+            label="Tags"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
           />
           <Box
             {...getRootProps()}
@@ -182,7 +273,7 @@ const ManageMemes = () => {
           <Button variant="contained" onClick={handleDialogClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={handleDialogClose}>
+          <Button variant="contained" onClick={sendMemeSource}>
             Add
           </Button>
         </DialogActions>
