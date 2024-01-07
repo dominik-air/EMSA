@@ -27,7 +27,7 @@ TAGS_2 = ["Travel", "Adventure"]
 
 MEDIA_DATA_1 = {
     "is_image": True,
-    "image_path": "our-storage.com/1",
+    "image_path": "https://static.wikia.nocookie.net/1bc8e1b6-e072-4813-bcf1-f8257e758f4b/scale-to-width/755",
     "tags": TAGS_1,
     "name": "Old but funny",
 }
@@ -37,7 +37,7 @@ MEDIA_DATA_2 = {
     "tags": TAGS_1[1::],
     "name": "Old tiktok star",
 }
-MEDIA_DATA_3 = {"is_image": True, "image_path": "our-storage.com/2", "tags": TAGS_2}
+MEDIA_DATA_3 = {"is_image": True, "image_path": "https://cdn.memes.com/up/86422301610844437/i/1610907521844.jpg", "tags": TAGS_2}
 MEDIA_DATA_4 = {"is_image": False, "link": "example.com/video", "tags": TAGS_2[1::]}
 
 
