@@ -87,8 +87,8 @@ class GroupCRUD:
                     & (user_group_association.c.group_id == group_id)
                 )
             )
-            is_member = await db.execute(membership_query)
-            is_member = is_member.scalar()
+            result = await db.execute(membership_query)
+            is_member = result.scalar()
 
             if not is_member:
                 association_query = insert(user_group_association).values(

@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.group import GroupCRUD
+from src.routes.contracts import AddGroupMembersRequest
 from src.tests.conftest import (
     GROUP_1,
     MEDIA_DATA_1,
@@ -50,17 +51,19 @@ async def test_add_group_members(
     advanced_use_case,
 ):
     group_id = advanced_use_case["group_ids"][1]
-    payload = [advanced_use_case["user_ids"][0], advanced_use_case["user_ids"][2]]
+    payload = AddGroupMembersRequest(
+        members=[advanced_use_case["user_ids"][0], advanced_use_case["user_ids"][2]]
+    )
     members_before = await GroupCRUD.get_users_in_group(group_id, db_session)
 
     response = await client.post(
-        f"/add_group_members?group_id={group_id}",
-        json=payload,
+        f"/add_group_members/{group_id}",
+        json=payload.model_dump(),
         headers=await headers_for_user2(db_session),
     )
     members_after = await GroupCRUD.get_users_in_group(group_id, db_session)
 
-    for user in payload:
+    for user in payload.members:
         assert user not in [user.mail for user in members_before]
         assert user in [user.mail for user in members_after]
     assert len(members_after) == len(members_before) + 2
@@ -78,7 +81,7 @@ async def test_remove_member(
     members_before = await GroupCRUD.get_users_in_group(group_id, db_session)
 
     response = await client.delete(
-        f"/remove_member?group_id={group_id}&member_mail={member_to_delete}",
+        f"/remove_member/{group_id}/{member_to_delete}",
         headers=await headers_for_user1(db_session),
     )
     members_after = await GroupCRUD.get_users_in_group(group_id, db_session)
@@ -117,7 +120,7 @@ async def test_get_mutual_groups(
         {"name": GROUP_1.name, "owner_mail": GROUP_1.owner_mail, "id": ANY},
     ]
     response = await client.get(
-        f"/mutual_groups?friend_mail={USER_2.mail}",
+        f"/mutual_groups/{USER_2.mail}",
         headers=await headers_for_user1(db_session),
     )
     assert response.status_code == status.HTTP_200_OK
@@ -138,7 +141,7 @@ async def test_get_group_members(
     ]
 
     response = await client.get(
-        f"/group_members?group_id={group_id}",
+        f"/group_members/{group_id}",
         headers=await headers_for_user1(db_session),
     )
 
@@ -171,7 +174,7 @@ async def test_get_group_content(client: AsyncClient, advanced_use_case, db_sess
     ]
 
     response = await client.get(
-        f"/group_content?group_id={group_id}",
+        f"/group_content/{group_id}",
         headers=await headers_for_user1(db_session),
     )
 
@@ -188,7 +191,7 @@ async def test_group_content_search_term(
     group_id = advanced_use_case["group_ids"][0]
 
     response = await client.get(
-        f"/group_content?group_id={group_id}&search_term={TAGS_1[0]}",
+        f"/group_content/{group_id}?search_term={TAGS_1[0]}",
         headers=await headers_for_user1(db_session),
     )
     assert response.status_code == status.HTTP_200_OK, response.json()
@@ -205,7 +208,7 @@ async def test_group_content_no_search_term(
     group_id = advanced_use_case["group_ids"][0]
 
     response = await client.get(
-        f"/group_content?group_id={group_id}",
+        f"/group_content/{group_id}",
         headers=await headers_for_user1(db_session),
     )
     assert response.status_code == status.HTTP_200_OK, response.json()
@@ -224,7 +227,7 @@ async def test_group_content_nonexistent_search_term(
     group_id = advanced_use_case["group_ids"][0]
 
     response = await client.get(
-        f"/group_content?group_id={group_id}&search_term=nonexistent",
+        f"/group_content/{group_id}?search_term=nonexistent",
         headers=await headers_for_user1(db_session),
     )
     assert response.status_code == status.HTTP_200_OK, response.json()
@@ -241,7 +244,7 @@ async def test_remove_group(
     groups_before = await GroupCRUD.get_groups(db_session)
 
     response = await client.delete(
-        f"/remove_group?group_id={group_id_to_delete}",
+        f"/remove_group/{group_id_to_delete}",
         headers=await headers_for_user1(db_session),
     )
     groups_after = await GroupCRUD.get_groups(db_session)
