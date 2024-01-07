@@ -77,7 +77,7 @@ class UserCRUD:
         await db.execute(delete(User).where(User.mail == mail))
 
     @staticmethod
-    async def create_token(access_token: str, db: AsyncSession) -> TokenCreate:
+    async def create_token(access_token: str, db: AsyncSession) -> TokenGet:
         decoded_token = jwt.decode(
             access_token, settings.AUTH_SECRET_KEY, algorithms=[settings.AUTH_ALGORITHM]
         )
@@ -100,7 +100,7 @@ class UserCRUD:
         row = result.fetchone()
 
         if row:
-            return TokenCreate(**row)
+            return TokenGet(**row)
         else:
             raise ValueError("Failed to create token. No row returned.")
 
