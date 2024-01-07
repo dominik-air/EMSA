@@ -3,8 +3,8 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import FriendCRUD, UserCRUD
-from src.database.models import Friendship, User
-from src.database.schemas import PrivateUser, PublicUser, UpdateUser
+from src.database.models import FriendRequest, Friendship, User
+from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser, UpdateUser
 from src.tests.conftest import USER_1, USER_2
 
 
@@ -126,3 +126,67 @@ async def test_get_user_friends(db_session: AsyncSession, two_users: list[Privat
 
     assert len(friends) == 1
     assert friends[0] == PublicUser(**user_2.model_dump())
+
+
+@pytest.mark.asyncio
+async def test_user_add_friend_request(
+    db_session: AsyncSession, two_users: list[PrivateUser]
+):
+    user_1, user_2 = two_users
+    created_request = await FriendCRUD.create_friend_request(
+        user_1.mail, user_2.mail, db_session
+    )
+
+    query = select(FriendRequest).where(
+        FriendRequest.sender_mail == user_1.mail,
+        FriendRequest.receiver_mail == user_2.mail,
+    )
+    result = await db_session.execute(query)
+    friend_request = result.fetchone()
+    assert FriendRequestGet(**friend_request[0].to_dict()) == created_request  # type: ignore
+
+
+@pytest.mark.asyncio
+async def test_user_get_pending_requests(
+    db_session: AsyncSession, two_users: list[PrivateUser]
+):
+    user_1, user_2 = two_users
+    await FriendCRUD.create_friend_request(user_1.mail, user_2.mail, db_session)
+
+    pending_requests = await FriendCRUD.get_pending_requests(user_2.mail, db_session)
+
+    assert len(pending_requests) == 1
+    assert pending_requests[0].mail == user_1.mail
+    assert pending_requests[0].name == user_1.name
+
+
+@pytest.mark.asyncio
+async def test_user_get_sent_requests(
+    db_session: AsyncSession, two_users: list[PrivateUser]
+):
+    user_1, user_2 = two_users
+    await FriendCRUD.create_friend_request(user_1.mail, user_2.mail, db_session)
+
+    sent_requests = await FriendCRUD.get_sent_requests(user_1.mail, db_session)
+
+    assert len(sent_requests) == 1
+    assert sent_requests[0].mail == user_2.mail
+    assert sent_requests[0].name == user_2.name
+
+
+@pytest.mark.asyncio
+async def test_user_delete_request(
+    db_session: AsyncSession, two_users: list[PrivateUser]
+):
+    user_1, user_2 = two_users
+    await FriendCRUD.create_friend_request(user_1.mail, user_2.mail, db_session)
+    await FriendCRUD.delete_request(user_1.mail, user_2.mail, db_session)
+
+    query = select(FriendRequest).where(
+        FriendRequest.sender_mail == user_1.mail,
+        FriendRequest.receiver_mail == user_2.mail,
+    )
+    result = await db_session.execute(query)
+    friend_request = result.fetchone()
+
+    assert friend_request is None

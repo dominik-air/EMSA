@@ -12,6 +12,7 @@ from src.tests.conftest import (
     USER_4,
     headers_for_user1,
     headers_for_user2,
+    headers_for_user4,
 )
 
 
@@ -122,14 +123,167 @@ async def test_update_account(client: AsyncClient, advanced_use_case, db_session
 
 
 @pytest.mark.asyncio
+async def test_create_friend_request(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    user_to_send_request = advanced_use_case["user_ids"][3]
+    response = await client.post(
+        "/create_friend_request",
+        json=AddFriendRequest(friend_mail=user_to_send_request).model_dump(),
+        headers=await headers_for_user1(db_session),
+    )
+    user_pending_request = await FriendCRUD.get_pending_requests(
+        user_to_send_request, db_session
+    )
+    response_data = response.json()
+
+    assert response.status_code == status.HTTP_201_CREATED
+    assert response_data["sender_mail"] == USER_1.mail
+    assert response_data["receiver_mail"] == user_to_send_request
+    assert any(request.mail == USER_1.mail for request in user_pending_request)
+    assert any(request.name == USER_1.name for request in user_pending_request)
+
+
+@pytest.mark.asyncio
+async def test_create_friend_request_self_error(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    user_to_send_request = advanced_use_case["user_ids"][0]
+    response = await client.post(
+        "/create_friend_request",
+        json=AddFriendRequest(friend_mail=user_to_send_request).model_dump(),
+        headers=await headers_for_user1(db_session),
+    )
+    response_data = response.json()
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response_data["detail"] == "Can't send friend request to yourself"
+
+
+@pytest.mark.asyncio
+async def test_create_friend_request_already_friends_error(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    user_to_send_request = advanced_use_case["user_ids"][1]
+    response = await client.post(
+        "/create_friend_request",
+        json=AddFriendRequest(friend_mail=user_to_send_request).model_dump(),
+        headers=await headers_for_user1(db_session),
+    )
+    response_data = response.json()
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response_data["detail"] == "Users are already friends"
+
+
+@pytest.mark.asyncio
+async def test_get_pending_requests(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    # user 4 sends friend request to user 1
+    await FriendCRUD.create_friend_request(USER_4.mail, USER_1.mail, db_session)
+    response = await client.get(
+        "/pending_friend_requests",
+        headers=await headers_for_user1(db_session),
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    pending_requests = response.json()
+    assert len(pending_requests) == 1
+    assert pending_requests[0]["name"] == USER_4.name
+    assert pending_requests[0]["mail"] == USER_4.mail
+
+
+@pytest.mark.asyncio
+async def test_get_pending_requests_no_requests(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    response = await client.get(
+        "/pending_friend_requests",
+        headers=await headers_for_user2(db_session),
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 0
+
+
+@pytest.mark.asyncio
+async def test_get_sent_requests(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    # user 4 sends friend request to user 1
+    await FriendCRUD.create_friend_request(USER_4.mail, USER_1.mail, db_session)
+    response = await client.get(
+        "/sent_friend_requests",
+        headers=await headers_for_user4(db_session),
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+    sent_requests = response.json()
+    assert len(sent_requests) == 1
+    assert sent_requests[0]["name"] == USER_1.name
+    assert sent_requests[0]["mail"] == USER_1.mail
+
+
+@pytest.mark.asyncio
+async def test_get_sent_requests_no_requests(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    response = await client.get(
+        "/sent_friend_requests",
+        headers=await headers_for_user1(db_session),
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.json()) == 0
+
+
+@pytest.mark.asyncio
+async def test_add_friend_self(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    response = await client.post(
+        "/add_friend",
+        json=AddFriendRequest(friend_mail=USER_1.mail).model_dump(),
+        headers=await headers_for_user1(db_session),
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.asyncio
+async def test_add_friend_already_friends(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    response = await client.post(
+        "/add_friend",
+        json=AddFriendRequest(friend_mail=USER_2.mail).model_dump(),
+        headers=await headers_for_user1(db_session),
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.asyncio
+async def test_add_friend_no_pending_request(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    response = await client.post(
+        "/add_friend",
+        json=AddFriendRequest(friend_mail=USER_3.mail).model_dump(),
+        headers=await headers_for_user1(db_session),
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.asyncio
 async def test_add_friend(
     client: AsyncClient, db_session: AsyncSession, advanced_use_case
 ):
     friends_before = await FriendCRUD.get_user_friends(USER_1.mail, db_session)
-    body = AddFriendRequest(friend_mail=USER_4.mail)
+
+    # user 4 sends friend request to user 1
+    await FriendCRUD.create_friend_request(USER_4.mail, USER_1.mail, db_session)
+    # user 1 accepts friend request from user 4
     response = await client.post(
         "/add_friend",
-        json=body.model_dump(),
+        json=AddFriendRequest(friend_mail=USER_4.mail).model_dump(),
         headers=await headers_for_user1(db_session),
     )
     friends_after = await FriendCRUD.get_user_friends(USER_1.mail, db_session)

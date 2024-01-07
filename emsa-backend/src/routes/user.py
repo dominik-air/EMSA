@@ -12,10 +12,17 @@ from src.authorization import (
 )
 from src.crud.group import GroupCRUD
 from src.crud.user import FriendCRUD, UserCRUD
-from src.database.schemas import PrivateUser, PublicUser, Token, UpdateUser
+from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser, UpdateUser
 from src.database.session import get_db
 from src.exceptions import IncorrectUsernameOrPassword
-from src.routes.contracts import AddFriendRequest, LoginRequest, RegisterRequest
+from src.routes.contracts import (
+    AddFriendRequest,
+    GetPendingRequests,
+    GetSentRequests,
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+)
 from src.settings import settings
 
 router = APIRouter()
@@ -73,7 +80,7 @@ async def register(
     status_code=status.HTTP_201_CREATED,
     summary="Register user",
     description="Register a new user.",
-    response_model=Token,
+    response_model=TokenResponse,
     responses={
         status.HTTP_201_CREATED: {
             "description": "User registered successfully",
@@ -88,7 +95,7 @@ async def register(
 async def login(
     request: LoginRequest,
     db: AsyncSession = Depends(get_db),
-) -> Token:
+) -> TokenResponse:
     try:
         await UserCRUD.get_user(request.mail, db)
     except ValueError as e:
@@ -107,7 +114,7 @@ async def login(
         db=db,
         expires_delta=access_token_expires,
     )
-    return Token(**{"access_token": access_token})
+    return TokenResponse(**{"access_token": access_token})
 
 
 @router.post(
@@ -200,6 +207,92 @@ async def remove_account(
 
 
 @router.post(
+    "/create_friend_request",
+    status_code=status.HTTP_201_CREATED,
+    summary="Create friend request",
+    description="Send a friend request to another user.",
+    response_model=FriendRequestGet,
+    responses={
+        status.HTTP_201_CREATED: {
+            "description": "Friend request sent successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "Bad request or friend request already sent",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def create_friend_request(
+    body: AddFriendRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
+) -> FriendRequestGet:
+    try:
+        return await FriendCRUD.create_friend_request(
+            sender_mail=current_user.mail,
+            receiver_mail=body.friend_mail,
+            db=db,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get(
+    "/pending_friend_requests",
+    summary="Get pending friend requests",
+    description="Retrieve a list of pending friend requests for the user.",
+    response_model=list[GetPendingRequests],
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Pending friend requests retrieved successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "User not found or no pending friend requests",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def get_pending_requests(
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
+) -> list[GetPendingRequests]:
+    try:
+        pending_requests = await FriendCRUD.get_pending_requests(current_user.mail, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return pending_requests
+
+
+@router.get(
+    "/sent_friend_requests",
+    summary="Get sent friend requests",
+    description="Retrieve a list of sent friend requests by the user.",
+    response_model=list[GetSentRequests],
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Sent friend requests retrieved successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "User not found or no sent friend requests",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def get_sent_requests(
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
+) -> list[GetSentRequests]:
+    try:
+        sent_requests = await FriendCRUD.get_sent_requests(current_user.mail, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return sent_requests
+
+
+@router.post(
     "/add_friend",
     status_code=status.HTTP_201_CREATED,
     summary="Add friend",
@@ -220,6 +313,11 @@ async def add_friend(
     db: AsyncSession = Depends(get_db),
     current_user: PublicUser = Depends(get_current_active_user),
 ) -> None:
+    pending_requests = await FriendCRUD.get_pending_requests(current_user.mail, db)
+    if not any(request.mail == body.friend_mail for request in pending_requests):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Friend request wasn't sent"
+        )
     try:
         await FriendCRUD.add_friend(current_user.mail, body.friend_mail, db)
     except ValueError as e:
@@ -277,7 +375,7 @@ async def remove_friend(
         },
     },
 )
-async def user_friends(
+async def get_user_friends(
     db: AsyncSession = Depends(get_db),
     current_user: PublicUser = Depends(get_current_active_user),
 ) -> list[PublicUser]:
