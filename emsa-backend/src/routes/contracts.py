@@ -10,6 +10,20 @@ class RegisterRequest(LoginRequest):
     name: str = ""
 
 
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class GetPendingRequests(BaseModel):
+    name: str
+    mail: str
+
+
+class GetSentRequests(GetPendingRequests):
+    ...
+
+
 class AddFriendRequest(BaseModel):
     friend_mail: str
 

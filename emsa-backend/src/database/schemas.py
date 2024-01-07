@@ -15,12 +15,9 @@ class UpdateUser(BaseModel):
     password_hash: str | None = None
 
 
-class Token(BaseModel):
+class TokenCreate(BaseModel):
     access_token: str
     token_type: str = "bearer"
-
-
-class TokenCreate(Token):
     is_active: bool
     user_mail: EmailStr
 
@@ -31,6 +28,15 @@ class TokenGet(TokenCreate):
 
 class TokenData(BaseModel):
     user_mail: EmailStr
+
+
+class FriendRequestCreate(BaseModel):
+    sender_mail: EmailStr
+    receiver_mail: EmailStr
+
+
+class FriendRequestGet(FriendRequestCreate):
+    id: int
 
 
 class FriendshipCreate(BaseModel):
