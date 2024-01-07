@@ -38,7 +38,8 @@ export default function HomePage() {
   const callLogout = async () => {
     try {
       const response = await axios.post(
-        `${API_URL}/logout`, {},
+        `${API_URL}/logout`,
+        {},
         { headers: headers },
       );
       console.log(response.data);
@@ -52,7 +53,7 @@ export default function HomePage() {
   }
 
   const handleLogout = async () => {
-    await callLogout()
+    await callLogout();
     logout();
   };
 
@@ -155,7 +156,7 @@ export default function HomePage() {
               }}
             >
               <Toolbar />
-              <MembersList groupId={activeGroup?.id} />
+              <MembersList groupId={activeGroup?.id ?? -1} />
             </Drawer>
           </>
         )}

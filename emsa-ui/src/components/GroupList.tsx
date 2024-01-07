@@ -13,21 +13,21 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
-interface GroupListProps {
-  userEmail: string;
-  onGroupClick: (group: string) => void;
-}
-
 interface Group {
   id: number;
   name: string;
-  owner_mail: string | null;
+  owner_mail: string;
+}
+
+interface GroupListProps {
+  userEmail: string;
+  onGroupClick: (group: Group) => void;
 }
 
 const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
-  const [groups, setGroups] = useState<string[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
@@ -47,11 +47,11 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
       .get<Group[]>(`${API_URL}/user_groups`, { headers: headers })
       .then((response) => {
         console.log(response);
-        setGroups(response.data.map((group) => group.name));
+        setGroups(response.data);
       })
       .catch((error) => {
         console.error("Error fetching user groups:", error);
-        setGroups(["no groups!"]);
+        setGroups([{ id: -1, name: "no groups", owner_mail: userEmail }]);
       });
   };
 
@@ -63,7 +63,7 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
     setOpen(false);
   };
 
-  const handleGroupClickInternal = (group: string) => {
+  const handleGroupClickInternal = (group: Group) => {
     onGroupClick(group);
   };
 
@@ -112,7 +112,7 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
                 sx={{ textAlign: "center", justifyContent: "center" }}
                 onClick={() => handleGroupClickInternal(group)}
               >
-                {group}
+                {group.name}
               </ListItemButton>
             </ListItem>
           ))}

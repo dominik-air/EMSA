@@ -110,16 +110,20 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
     return {
       type: info.is_image ? "image" : "link",
       url: info.is_image ? info.image_path : info.link,
-      tags: info.tags
-    }
-  }
+      tags: info.tags,
+    };
+  };
 
   const fetchMemes = async () => {
     try {
-      const response = await axios.get<MediaInfo[]>(`${API_URL}/group_content/${groupId}`, {
-        params: {search_term: searchTerm}, headers: headers,
-      });
-      setMemes(response.data.map(info => MediaInfoToMeme(info)));
+      const response = await axios.get<MediaInfo[]>(
+        `${API_URL}/group_content/${groupId}`,
+        {
+          params: { search_term: searchTerm },
+          headers: headers,
+        },
+      );
+      setMemes(response.data.map((info) => MediaInfoToMeme(info)));
     } catch (error) {
       console.error("Error fetching memes:", error);
     }
