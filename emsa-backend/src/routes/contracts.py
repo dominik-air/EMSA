@@ -10,6 +10,14 @@ class RegisterRequest(LoginRequest):
     name: str = ""
 
 
+class AddFriendRequest(BaseModel):
+    friend_mail: str
+
+
+class AddGroupMembersRequest(BaseModel):
+    members: list[EmailStr]
+
+
 class ProposeTagsRequest(BaseModel):
     name: str
     is_image: bool
