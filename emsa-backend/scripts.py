@@ -27,7 +27,7 @@ TAGS_2 = ["Travel", "Adventure"]
 
 MEDIA_DATA_1 = {
     "is_image": True,
-    "image_path": "our-storage.com/1",
+    "image_path": "https://i.chzbgr.com/full/9353383424/h13AAB7B7/funny-meme-from-madagascar-about-zoning-out-when-someone-else-is-talking",
     "tags": TAGS_1,
     "name": "Old but funny",
 }
@@ -37,7 +37,7 @@ MEDIA_DATA_2 = {
     "tags": TAGS_1[1::],
     "name": "Old tiktok star",
 }
-MEDIA_DATA_3 = {"is_image": True, "image_path": "our-storage.com/2", "tags": TAGS_2}
+MEDIA_DATA_3 = {"is_image": True, "image_path": "https://p16-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oAfIEChK23MO9ZYQALA0I9LUwAibByACqUBpti~tplv-photomode-zoomcover:720:720.jpeg?x-expires=1704733200&x-signature=Qagm7THdLQr8F9Q7YEobUZnkR0o%3D", "tags": TAGS_2}
 MEDIA_DATA_4 = {"is_image": False, "link": "example.com/video", "tags": TAGS_2[1::]}
 
 
