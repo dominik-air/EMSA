@@ -80,9 +80,9 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
   };
 
   const handleSelectFriend = (friend: Friend) => {
-    setSelectedFriends(prevSelected => {
+    setSelectedFriends((prevSelected) => {
       if (prevSelected.includes(friend)) {
-        return prevSelected.filter(f => f !== friend);
+        return prevSelected.filter((f) => f !== friend);
       } else {
         return [...prevSelected, friend];
       }
@@ -92,8 +92,8 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
   const addFriendsToGroup = async () => {
     try {
       const response = await axios.post(
-        `${API_URL}/add_group_members/${groupId}`, 
-        { members: selectedFriends.map((f) => f.mail) }, 
+        `${API_URL}/add_group_members/${groupId}`,
+        { members: selectedFriends.map((f) => f.mail) },
         { headers: headers },
       );
       console.log(response);
@@ -154,20 +154,20 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
       <Dialog open={addMemberDialogOpen} onClose={handleCloseAddMemberDialog}>
         <DialogTitle>Add friend to group</DialogTitle>
         <DialogContent>
-        <FormGroup>
-      {friends.map((friend, index) => (
-        <FormControlLabel
-          key={index}
-          control={
-            <Checkbox
-              onChange={() => handleSelectFriend(friend)}
-              checked={selectedFriends.includes(friend)}
-            />
-          }
-          label={friend.name}
-        />
-      ))}
-    </FormGroup>
+          <FormGroup>
+            {friends.map((friend, index) => (
+              <FormControlLabel
+                key={index}
+                control={
+                  <Checkbox
+                    onChange={() => handleSelectFriend(friend)}
+                    checked={selectedFriends.includes(friend)}
+                  />
+                }
+                label={friend.name}
+              />
+            ))}
+          </FormGroup>
         </DialogContent>
         <DialogActions>
           <Button variant="contained" onClick={handleCloseAddMemberDialog}>

@@ -98,7 +98,11 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   const handleAcceptRequest = async (friendMail: string) => {
     console.log(`callled with ${friendMail}`);
     try {
-      await axios.post(`${API_URL}/add_friend`, { friend_mail: friendMail }, {headers: headers});
+      await axios.post(
+        `${API_URL}/add_friend`,
+        { friend_mail: friendMail },
+        { headers: headers },
+      );
       setFriendRequests((prev) => prev.filter((f) => f.mail !== friendMail));
     } catch (error) {
       console.error("Error accepting friend request:", error);
@@ -107,7 +111,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
 
   const handleDeclineRequest = async (friendMail: string) => {
     try {
-      await axios.delete(`${API_URL}/decline_friend_request/${123}`)
+      await axios.delete(`${API_URL}/decline_friend_request/${123}`);
       setFriendRequests((prev) => prev.filter((f) => f.mail !== friendMail));
     } catch (error) {
       console.error("Error declining friend request:", error);

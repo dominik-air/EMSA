@@ -16,5 +16,6 @@ module.exports = {
       { allowConstantExport: true },
     ],
     "prettier/prettier": 2,
+    "react-hooks/exhaustive-deps": "off"
   },
 };

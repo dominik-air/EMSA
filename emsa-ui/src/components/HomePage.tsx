@@ -58,6 +58,7 @@ export default function HomePage() {
   };
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    event.preventDefault();
     setSelectedTab(newValue);
   };
 
