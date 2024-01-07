@@ -92,9 +92,11 @@ async def get_current_user(
         raise credentials_exception
 
     db_token = await UserCRUD.get_token(user.mail, db)
-    if db_token is None or not (db_token.is_active if db_token else False) or db_token.access_token != token:
-        credentials_exception.detail = f"No user token were find or token is " \
-                                       f"different than in db db={db_token.access_token} vs given={token}"
+    if (
+        db_token is None
+        or not (db_token.is_active if db_token else False)
+        or db_token.access_token != token
+    ):
         raise credentials_exception
     return user
 

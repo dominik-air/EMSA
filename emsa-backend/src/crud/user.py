@@ -158,6 +158,8 @@ class FriendCRUD:
     async def add_friend(
         user_mail: EmailStr, friend_mail: EmailStr, db: AsyncSession
     ) -> None:
+        if user_mail == friend_mail:
+            raise ValueError("Can't add yourself as friend")
         await UserCRUD.get_user(user_mail, db)
         await UserCRUD.get_user(friend_mail, db)
 
