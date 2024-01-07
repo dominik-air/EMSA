@@ -2,7 +2,7 @@ import React, { createContext, useState, ReactNode, ReactElement } from "react";
 
 interface AuthContextType {
   isLoggedIn: boolean;
-  email: string | null;
+  email: string;
   login: (email: string, token: string) => void;
   logout: () => void;
 }
@@ -19,8 +19,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
     Boolean(localStorage.getItem("sessionToken")),
   );
-  const [email, setEmail] = useState<string | null>(
-    localStorage.getItem("email"),
+  const [email, setEmail] = useState<string>(
+    localStorage.getItem("email") ?? "no email",
   );
 
   const login = (email: string, token: string) => {
@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   const logout = () => {
     localStorage.removeItem("sessionToken");
     localStorage.removeItem("email");
-    setEmail(null);
+    setEmail("no email");
     setIsLoggedIn(false);
   };
 

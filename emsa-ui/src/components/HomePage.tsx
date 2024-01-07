@@ -120,8 +120,8 @@ export default function HomePage() {
             </Drawer>
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
               <ManageMemes
-                groupName={activeGroup?.name}
-                groupId={activeGroup?.id}
+                groupName={activeGroup?.name ?? "no group"}
+                groupId={activeGroup?.id ?? -1}
               />
             </Box>
             <Drawer
