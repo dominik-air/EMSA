@@ -68,9 +68,9 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: AsyncSession = Depends(get_db),
 ) -> PrivateUser:
+    detail = "Could not validate credentials"
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
@@ -79,23 +79,23 @@ async def get_current_user(
         )
         user_mail: str = payload.get("sub")
         if not user_mail:
+            credentials_exception.detail = f"{detail}. Did not find user_mail in jwt"
             raise credentials_exception
         token_data = TokenData(user_mail=user_mail)
-    except JWTError:
+    except JWTError as e:
+        credentials_exception.detail = f"{detail}. {str(e)}"
         raise credentials_exception
     try:
         user = await UserCRUD.get_user(token_data.user_mail, db)
-    except ValueError:
+    except ValueError as e:
+        credentials_exception.detail = f"{detail}. {str(e)}"
         raise credentials_exception
 
     db_token = await UserCRUD.get_token(user.mail, db)
-    if (
-        db_token is None
-        or not (db_token.is_active if db_token else False)
-        or db_token.access_token != token
-    ):
+    if db_token is None or not (db_token.is_active if db_token else False) or db_token.access_token != token:
+        credentials_exception.detail = f"No user token were find or token is " \
+                                       f"different than in db db={db_token.access_token} vs given={token}"
         raise credentials_exception
-
     return user
 
 

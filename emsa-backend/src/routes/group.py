@@ -120,7 +120,7 @@ async def user_groups(
     current_user: PublicUser = Depends(get_current_active_user),
 ) -> list[GroupGet]:
     try:
-        groups = await GroupCRUD.get_user_groups(current_user.mail, db)
+        groups = await GroupCRUD.get_groups(db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

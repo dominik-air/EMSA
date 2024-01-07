@@ -110,7 +110,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
   useEffect(() => {
     const fetchMemes = async () => {
       try {
-        const response = await axios.post<Meme[]>(`${API_URL}/memes`, {
+        const response = await axios.post<Meme[]>(`${API_URL}/group_content`, {
           group: groupId,
           searchTerm: searchTerm,
         });
@@ -160,7 +160,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
       tags: tags.split(" "),
     }
     try {
-      const response = await axios.post<MediaInfo>(`${API_URL}/add_link`, linkData);
+      const response = await axios.post<MediaInfo>(`${API_URL}/add_link`, linkData, {headers: headers});
       console.log(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {

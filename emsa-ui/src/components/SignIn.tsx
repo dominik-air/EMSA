@@ -18,10 +18,10 @@ export default function SignIn() {
   const API_URL = import.meta.env.VITE_API_URL;
   const [loginError, setLoginError] = useState("");
 
-  const loginService = async (username: string, password: string) => {
+  const loginService = async (email: string, password: string) => {
     try {
       const response = await axios.post(`${API_URL}/login`, {
-        mail: username,
+        mail: email,
         password: password,
       });
       console.log(response);
@@ -34,13 +34,15 @@ export default function SignIn() {
 
   const { login } = useAuth();
 
-  const handleLogin = async (username: string, password: string) => {
+  const handleLogin = async (email: string, password: string) => {
     try {
-      const response = await loginService(username, password);
+      console.log(email, password);
+      const response = await loginService(email, password);
+      console.log(response);
       const { access_token } = response;
       console.log(access_token);
 
-      login(username, access_token);
+      login(email, access_token);
       setLoginError("");
     } catch (error) {
       console.error("Login error", error);
@@ -48,14 +50,14 @@ export default function SignIn() {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = data.get("email");
     const password = data.get("password");
 
     if (typeof email === "string" && typeof password === "string") {
-      handleLogin(email, password);
+      await handleLogin(email, password);
     } else {
       console.error("Form data is not valid.");
     }

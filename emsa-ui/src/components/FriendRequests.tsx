@@ -104,9 +104,7 @@ interface FriendRequestsProps {
 
   const handleRemoveFriend = async (friendEmail: string) => {
     try {
-      await axios.delete(`${API_URL}/remove_friend`, {
-        data: { friend_email: encodeURIComponent(friendEmail) },
-      });
+      await axios.delete(`${API_URL}/remove_friend`, { friend_mail: encodeURIComponent(friendEmail) }, {headers: headers});
       setFriends(prevFriends => prevFriends.filter(friend => friend.name !== friendEmail));
     } catch (error) {
       console.error("Error removing friend:", error);

@@ -24,6 +24,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
   );
 
   const login = (email: string, token: string) => {
+    console.log(`email: ${email}, token: ${token}`);
     localStorage.setItem("sessionToken", token);
     localStorage.setItem("email", email);
     setEmail(email);
