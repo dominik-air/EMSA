@@ -36,7 +36,6 @@ export default function SignIn() {
 
   const handleLogin = async (email: string, password: string) => {
     try {
-      console.log(email, password);
       const response = await loginService(email, password);
       console.log(response);
       const { access_token } = response;
