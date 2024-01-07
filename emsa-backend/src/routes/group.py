@@ -8,7 +8,6 @@ from src.crud.media import MediaCRUD
 from src.crud.user import FriendCRUD
 from src.database.schemas import GroupCreate, GroupGet, MediaGet, MediaQuery, PublicUser
 from src.database.session import get_db
-from src.routes.contracts import AddGroupMembersRequest
 
 router = APIRouter()
 
@@ -44,7 +43,7 @@ async def create_group(
 
 
 @router.post(
-    "/add_group_members/{group_id}",
+    "/add_group_members",
     status_code=status.HTTP_200_OK,
     summary="Add members to a group",
     description="Add members through list of emails related to app users to an existing group by group_id.",
@@ -61,18 +60,18 @@ async def create_group(
 )
 async def add_group_members(
     group_id: int,
-    body: AddGroupMembersRequest,
+    members: list[EmailStr],
     db: AsyncSession = Depends(get_db),
     _: PublicUser = Depends(get_current_active_user),
 ) -> None:
     try:
-        await GroupCRUD.add_users_to_group(group_id, body.members, db)
+        await GroupCRUD.add_users_to_group(group_id, members, db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete(
-    "/remove_member/{group_id}/{member_mail}",
+    "/remove_member",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove a member from a group",
     description="Remove a member from an existing group by group_id.",
@@ -128,7 +127,7 @@ async def user_groups(
 
 
 @router.get(
-    "/mutual_groups/{friend_mail}",
+    "/mutual_groups",
     summary="Get mutual groups",
     description="Retrieve a list of groups that are mutual between two friends.",
     response_model=list[GroupGet],
@@ -160,7 +159,7 @@ async def mutual_groups(
 
 
 @router.get(
-    "/group_members/{group_id}",
+    "/group_members",
     summary="Get group members",
     description="Retrieve a list of members related to group by group_id.",
     response_model=list[PublicUser],
@@ -187,7 +186,7 @@ async def group_members(
 
 
 @router.get(
-    "/group_content/{group_id}",
+    "/group_content",
     summary="Get group content",
     description="Retrieve a list of media related to group by group_id.",
     response_model=list[MediaGet],
@@ -219,7 +218,7 @@ async def group_content(
 
 
 @router.delete(
-    "/remove_group/{group_id}",
+    "/remove_group",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove a group",
     description="Remove an existing group by group_id.",

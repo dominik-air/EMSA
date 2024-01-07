@@ -15,7 +15,7 @@ from src.crud.user import FriendCRUD, UserCRUD
 from src.database.schemas import PrivateUser, PublicUser, Token, UpdateUser
 from src.database.session import get_db
 from src.exceptions import IncorrectUsernameOrPassword
-from src.routes.contracts import AddFriendRequest, LoginRequest, RegisterRequest
+from src.routes.contracts import LoginRequest, RegisterRequest
 from src.settings import settings
 
 router = APIRouter()
@@ -216,18 +216,18 @@ async def remove_account(
     },
 )
 async def add_friend(
-    body: AddFriendRequest,
+    friend_mail: EmailStr,
     db: AsyncSession = Depends(get_db),
     current_user: PublicUser = Depends(get_current_active_user),
 ) -> None:
     try:
-        await FriendCRUD.add_friend(current_user.mail, body.friend_mail, db)
+        await FriendCRUD.add_friend(current_user.mail, friend_mail, db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete(
-    "/remove_friend/{friend_mail}",
+    "/remove_friend",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Remove friend",
     description="Add a friend for the passed user.",

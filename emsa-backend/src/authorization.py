@@ -89,11 +89,7 @@ async def get_current_user(
         raise credentials_exception
 
     db_token = await UserCRUD.get_token(user.mail, db)
-    if (
-        db_token is None
-        or not (db_token.is_active if db_token else False)
-        or db_token.access_token != token
-    ):
+    if not db_token or not db_token.is_active or db_token.access_token != token:
         raise credentials_exception
 
     return user
@@ -104,5 +100,5 @@ async def get_current_active_user(
 ) -> PublicUser:
     # TODO: remove when users soft delete will be done
     # if current_user.disabled:
-    #     raise HTTPException(status_code=400, detail="Inactive user")
+    # raise HTTPException(status_code=400, detail="Inactive user")
     return PublicUser(**current_user.model_dump())
