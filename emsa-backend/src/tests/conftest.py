@@ -14,9 +14,10 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import sessionmaker
 
 from src.authorization import create_access_token
+from src.crud.friend import FriendCRUD
 from src.crud.group import GroupCRUD
 from src.crud.media import MediaCRUD
-from src.crud.user import FriendCRUD, UserCRUD
+from src.crud.user import UserCRUD
 from src.database.schemas import (
     GroupCreate,
     GroupGet,

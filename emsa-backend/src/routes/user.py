@@ -10,8 +10,9 @@ from src.authorization import (
     get_current_active_user,
     get_password_hash,
 )
+from src.crud.friend import FriendCRUD
 from src.crud.group import GroupCRUD
-from src.crud.user import FriendCRUD, UserCRUD
+from src.crud.user import UserCRUD
 from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser, UpdateUser
 from src.database.session import get_db
 from src.exceptions import IncorrectUsernameOrPassword
@@ -138,6 +139,35 @@ async def logout(
     current_user: PublicUser = Depends(get_current_active_user),
 ) -> None:
     await UserCRUD.deactivate_token(current_user, db)
+
+
+@router.get(
+    "/user_details",
+    status_code=status.HTTP_200_OK,
+    summary="Get user account details",
+    description="Get user account details like name and email.",
+    response_model=PublicUser,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Account updated successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "User account not found",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def user_details(
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
+) -> PublicUser:
+    try:
+        user = await UserCRUD.get_user(current_user.mail, db)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    return PublicUser(**user.model_dump())
 
 
 @router.put(
@@ -290,6 +320,37 @@ async def get_sent_requests(
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     return sent_requests
+
+
+@router.delete(
+    "/decline_friend_request/{mail}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove friend sent friend requests",
+    description="Remove friend request received by current user from {mail}.",
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Sent friend requests retrieved successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "User not found or no sent friend requests",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def decline_friend_request(
+    mail: EmailStr,
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
+) -> None:
+    try:
+        await FriendCRUD.handle_delete_request(
+            receiver_mail=current_user.mail,
+            sender_mail=mail,
+            db=db,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post(

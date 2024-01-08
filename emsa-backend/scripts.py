@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.group import GroupCRUD
 from src.crud.media import MediaCRUD
-from src.crud.user import FriendCRUD, UserCRUD
+from src.crud.user import UserCRUD
+from src.crud.friend import FriendCRUD
 from src.database.schemas import GroupCreate, MediaCreate, PrivateUser
 from src.database.session import async_session_global
 
