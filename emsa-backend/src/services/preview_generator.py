@@ -2,23 +2,24 @@ import asyncio
 import re
 
 import aiohttp
-from playwright.async_api import async_playwright
+from playwright.async_api import Page, async_playwright
+
+from src.services.cloud_storage import CloudStorage, FailedToUploadImageException
 
 
-async def fetch_youtube_thumbnail(url):
+async def fetch_youtube_thumbnail(url: str) -> bytes:
     video_id = extract_video_id(url)
     thumbnail_url = f"https://img.youtube.com/vi/{video_id}/0.jpg"
     async with aiohttp.ClientSession() as session:
         async with session.get(thumbnail_url) as response:
-            return await response.read()  # Returns image as bytes
+            return await response.read()
 
 
-async def fetch_tiktok_logo():
-    with open(r"emsa-backend\assets\thumbnails\tiktok_logo.png", "rb") as f:
-        return f.read()  # Returns image as bytes
+async def fetch_tiktok_logo() -> str:
+    return "https://storage.googleapis.com/emsa-content/thumbnails/tiktok_logo"
 
 
-async def fetch_website_screenshot(url):
+async def fetch_website_screenshot(url: str) -> bytes:
     async with async_playwright() as p:
         browser = await p.chromium.launch()
         page = await browser.new_page()
@@ -26,19 +27,28 @@ async def fetch_website_screenshot(url):
         await close_popups(page)
         screenshot = await page.screenshot()
         await browser.close()
-        return screenshot  # Returns screenshot as bytes
+        return screenshot
 
 
-async def link_preview_generator(link):
-    if "youtube.com" in link:
-        return await fetch_youtube_thumbnail(link)
-    elif "tiktok.com" in link:
+async def link_preview_generator(url: str) -> bytes | str:
+    if "youtube.com" in url:
+        return await fetch_youtube_thumbnail(url)
+    elif "tiktok.com" in url:
         return await fetch_tiktok_logo()
     else:
-        return await fetch_website_screenshot(link)
+        return await fetch_website_screenshot(url)
 
 
-def extract_video_id(url):
+async def preview_link_upload(data: bytes, media_id: int) -> str:
+    cloud_storage = CloudStorage()
+    try:
+        key = await cloud_storage.upload_image(str(media_id), data, "thumbnails")
+    except FailedToUploadImageException:
+        key = "preview_link_error"
+    return key
+
+
+def extract_video_id(url: str) -> None | str:
     """
     Extracts the YouTube video ID from a URL.
     """
@@ -49,10 +59,10 @@ def extract_video_id(url):
     if match:
         return match.group(1)
     else:
-        return None  # Or handle this case as needed
+        return None
 
 
-async def close_popups(page):
+async def close_popups(page: Page) -> None:
     # List of common selectors used in popups
     popup_selectors = [
         "button[aria-label='Close']",

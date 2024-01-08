@@ -69,6 +69,8 @@ def test_media_create():
         "name": "abc",
         "image_path": "image.jpg",
         "link": "example.com",
+        "preview_link": "https://storage.googleapis.com/123",
+        "uploaded_by": "abc@example.com",
         "tags": ["a", "b", "c"],
     }
     media = MediaCreate(**data)
@@ -83,6 +85,8 @@ def test_media_list():
         "name": "abc",
         "image_path": "image.jpg",
         "link": "example.com",
+        "preview_link": "https://storage.googleapis.com/123",
+        "uploaded_by": "abc@example.com",
         "tags": ["a", "b", "c"],
     }
     media_list = MediaList(**data)
@@ -97,6 +101,8 @@ def test_media_get():
         "name": "abc",
         "image_path": "image.jpg",
         "link": "example.com",
+        "preview_link": "https://storage.googleapis.com/123",
+        "uploaded_by": "abc@example.com",
         "tags": ["a", "b", "c"],
     }
     media_get = MediaGet(**data)
@@ -108,6 +114,7 @@ def test_media_update():
         "is_image": False,
         "image_path": "updated_image.jpg",
         "link": "updated_example.com",
+        "preview_link": "https://storage.googleapis.com/123",
         "name": "new name",
     }
     media_update = MediaUpdate(**data)

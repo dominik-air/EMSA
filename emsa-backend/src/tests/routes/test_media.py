@@ -7,7 +7,7 @@ from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.tests.conftest import GROUP_1, headers_for_user1
+from src.tests.conftest import GROUP_1, USER_1, headers_for_user1
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -38,7 +38,7 @@ async def test_add_link(
 ):
     payload = {
         "group_id": advanced_use_case["group_ids"][0],
-        "link": "https://example.com",
+        "link": "https://www.tiktok.com/@hubsztal_/video/7313356906494430496?_r=1&_t=8iG637nsGEy",
         "tags": ["tag1", "tag2"],
         "name": "abc",
     }
@@ -46,8 +46,10 @@ async def test_add_link(
         "group_id": ANY,
         "is_image": False,
         "image_path": "",
-        "link": "https://example.com",
+        "link": "https://www.tiktok.com/@hubsztal_/video/7313356906494430496?_r=1&_t=8iG637nsGEy",
         "name": "abc",
+        "preview_link": "https://storage.googleapis.com/emsa-content/thumbnails/tiktok_logo",
+        "uploaded_by": USER_1.mail,
         "tags": ["tag1", "tag2"],
         "id": ANY,
     }
@@ -82,6 +84,8 @@ async def test_add_image(
         "image_path": "cloud_key",
         "link": "",
         "name": "abc",
+        "preview_link": "cloud_key",
+        "uploaded_by": USER_1.mail,
         "tags": ["tag1", "tag2"],
         "id": ANY,
     }
