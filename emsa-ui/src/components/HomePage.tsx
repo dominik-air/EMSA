@@ -159,7 +159,7 @@ export default function HomePage() {
               }}
             >
               <Toolbar />
-              <MembersList groupId={activeGroup?.id ?? -1} />
+              <MembersList groupId={activeGroup?.id ?? -1} isOwner={true} />
             </Drawer>
           </>
         )}

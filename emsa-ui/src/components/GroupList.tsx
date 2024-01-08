@@ -29,6 +29,7 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
   const [open, setOpen] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [newGroupName, setNewGroupName] = useState("");
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
@@ -85,6 +86,10 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
       });
   };
 
+  const handleRemoveGroup = (group: Group) => {
+    console.log(`removed ${group.name} group!!!`);
+  };
+
   return (
     <>
       <List sx={{ width: "100%", bgcolor: "background.paper" }}>
@@ -103,19 +108,50 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
           </Button>
         </ListItem>
         {groups &&
-          groups.map((group, index) => (
-            <ListItem
-              key={index}
-              sx={{ justifyContent: "center", display: "flex" }}
-            >
-              <ListItemButton
-                sx={{ textAlign: "center", justifyContent: "center", border: 1, borderRadius: 2 }}
-                onClick={() => handleGroupClickInternal(group)}
-              >
-                {group.name}
-              </ListItemButton>
-            </ListItem>
-          ))}
+groups.map((group, index) => (
+  <ListItem
+    key={index}
+    sx={{ 
+      justifyContent: "center", 
+      display: "flex",
+      position: 'relative',
+      mb: 2
+    }}
+    onMouseEnter={() => setHoveredIndex(index)}
+    onMouseLeave={() => setHoveredIndex(null)}
+  >
+    <ListItemButton
+      sx={{ 
+        textAlign: "center", 
+        justifyContent: "center", 
+        border: 1, 
+        borderRadius: 2,
+        width: '60%',
+        mr: 1 
+      }}
+      onClick={() => handleGroupClickInternal(group)}
+    >
+      {group.name}
+    </ListItemButton>
+    {group.owner_mail === userEmail && hoveredIndex === index && (
+      <Button 
+        variant="contained" 
+        color="secondary"
+        sx={{ 
+          textAlign: "center", 
+          justifyContent: "center", 
+          border: 1, 
+          borderRadius: 2,
+          width: '39%',
+          ml: 1 
+        }}
+        onClick={() => handleRemoveGroup(group)}
+      >
+        Remove
+      </Button>
+    )}
+  </ListItem>
+))}
       </List>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Create new group</DialogTitle>

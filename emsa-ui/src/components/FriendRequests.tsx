@@ -215,7 +215,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
                             Accept
                           </Button>
                           <Button
-                            variant="outlined"
+                            variant="contained"
                             color="secondary"
                             sx={{ ml: 1 }}
                             onClick={() => handleDeclineRequest(request.mail)}
@@ -257,7 +257,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
                       <TableCell>{request.mail}</TableCell>
                       <TableCell>
                         <Button
-                          variant="outlined"
+                          variant="contained"
                           color="secondary"
                           onClick={() => handleDeclineRequest(request.mail)}
                         >
@@ -291,7 +291,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
                 sx={{ justifyContent: "space-between", display: "flex" }}
               >
                 <Typography variant="subtitle1">{friend.name}</Typography>
-                <Typography variant="subtitle1">{friend.mail}</Typography>
+                <Typography variant="subtitle1">{friend.name}</Typography>
                 <Button
                   variant="contained"
                   color="secondary"
