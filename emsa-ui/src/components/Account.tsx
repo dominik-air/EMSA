@@ -10,7 +10,6 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
 } from "@mui/material";
 
@@ -63,10 +62,12 @@ const AccountComponent: React.FC = () => {
       .put("/api/account/update", updateDetails)
       .then((response) => {
         // Handle successful update
+        console.log(response);
         alert("Account details updated successfully!");
       })
       .catch((error) => {
         // Handle error
+        console.error(error);
         alert("Failed to update account details.");
       });
   };

@@ -106,7 +106,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
 
   const removeMember = async () => {
     console.log("removed!!!");
-  }
+  };
 
   const handleAddFriendsToGroup = async () => {
     await addFriendsToGroup();
@@ -114,8 +114,9 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
   };
 
   const handleRemoveMember = async (name: string) => {
+    console.log(name);
     await removeMember();
-  }
+  };
 
   return (
     <>
@@ -139,48 +140,49 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
           </Button>
         </ListItem>
         {members.map((member, index) => (
-  <ListItem
-    key={index}
-    sx={{ 
-      justifyContent: "center", 
-      display: "flex",
-      position: 'relative',
-      mb: 2
-    }}
-    onMouseEnter={() => setHoveredIndex(index)}
-    onMouseLeave={() => setHoveredIndex(null)}
-  >
-    <ListItemButton
-      sx={{ 
-        textAlign: "center", 
-        justifyContent: "center", 
-        border: 1, 
-        borderRadius: 2,
-        width: '60%',
-        mr: 1 
-      }}
-      onClick={() => handleClickOpen(member.name)}
-    >
-      {member.name}
-    </ListItemButton>
-    {isOwner && hoveredIndex === index && (
-      <Button variant="contained" color="secondary"
-        sx={{ 
-          textAlign: "center", 
-          justifyContent: "center", 
-          border: 1, 
-          borderRadius: 2,
-          width: '39%', 
-          ml: 1 
-        }}
-        onClick={() => handleRemoveMember(member.name)}
-      >
-        Remove
-      </Button>
-    )}
-  </ListItem>
-))}
-
+          <ListItem
+            key={index}
+            sx={{
+              justifyContent: "center",
+              display: "flex",
+              position: "relative",
+              mb: 2,
+            }}
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+          >
+            <ListItemButton
+              sx={{
+                textAlign: "center",
+                justifyContent: "center",
+                border: 1,
+                borderRadius: 2,
+                width: "60%",
+                mr: 1,
+              }}
+              onClick={() => handleClickOpen(member.name)}
+            >
+              {member.name}
+            </ListItemButton>
+            {isOwner && hoveredIndex === index && (
+              <Button
+                variant="contained"
+                color="secondary"
+                sx={{
+                  textAlign: "center",
+                  justifyContent: "center",
+                  border: 1,
+                  borderRadius: 2,
+                  width: "39%",
+                  ml: 1,
+                }}
+                onClick={() => handleRemoveMember(member.name)}
+              >
+                Remove
+              </Button>
+            )}
+          </ListItem>
+        ))}
       </List>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Member Details</DialogTitle>
