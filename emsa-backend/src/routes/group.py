@@ -3,9 +3,9 @@ from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.authorization import get_current_active_user
+from src.crud.friend import FriendCRUD
 from src.crud.group import GroupCRUD
 from src.crud.media import MediaCRUD
-from src.crud.user import FriendCRUD
 from src.database.schemas import GroupCreate, GroupGet, MediaGet, MediaQuery, PublicUser
 from src.database.session import get_db
 from src.routes.contracts import AddGroupMembersRequest
