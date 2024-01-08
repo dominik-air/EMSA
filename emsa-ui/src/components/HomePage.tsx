@@ -17,6 +17,7 @@ import GroupList from "./GroupList";
 import ManageMemes from "./ManageMemes";
 import MembersList from "./MembersList";
 import FriendRequests from "./FriendRequests";
+import AccountDetails from "./Account";
 import logo from "../assets/emsa-logo.png";
 
 interface Group {
@@ -112,6 +113,7 @@ export default function HomePage() {
             >
               <Tab label="Memes" />
               <Tab label="Friends" />
+              <Tab label="Account" />
             </Tabs>
           </Box>
           <Button color="inherit" onClick={handleLogout}>
@@ -164,6 +166,11 @@ export default function HomePage() {
         {selectedTab === 1 && (
           <Box sx={{ flexGrow: 1, p: 3 }}>
             <FriendRequests userEmail={email} />
+          </Box>
+        )}
+        {selectedTab === 2 && (
+          <Box sx={{ flexGrow: 1, p: 3 }}>
+            <AccountDetails />
           </Box>
         )}
       </Box>

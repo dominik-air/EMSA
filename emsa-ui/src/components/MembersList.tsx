@@ -14,6 +14,7 @@ import {
   Checkbox,
   FormGroup,
   FormControlLabel,
+  Paper
 } from "@mui/material";
 
 interface Member {
@@ -134,7 +135,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
             sx={{ justifyContent: "center", display: "flex" }}
           >
             <ListItemButton
-              sx={{ textAlign: "center", justifyContent: "center" }}
+              sx={{ textAlign: "center", justifyContent: "center", border: 1, borderRadius: 2 }}
               onClick={() => handleClickOpen(member.name)}
             >
               {member.name}

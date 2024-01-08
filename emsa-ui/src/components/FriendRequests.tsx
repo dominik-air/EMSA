@@ -12,6 +12,12 @@ import {
   DialogActions,
   TextField,
   Paper,
+  Table,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
 } from "@mui/material";
 
 interface Friend {
@@ -31,20 +37,37 @@ interface FriendRequestsProps {
 const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [sentFriendRequests, setSentFriendRequests] = useState<FriendRequest[]>(
+    [],
+  );
+  const [pendingFriendRequests, setPendingFriendRequests] = useState<
+    FriendRequest[]
+  >([]);
   const [newFriendEmail, setNewFriendEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
-  const fetchFriendRequests = async () => {
+  const fetchPendingFriendRequests = async () => {
     try {
       const friendRequestsResponse = await axios.get<FriendRequest[]>(
         `${API_URL}/pending_friend_requests`,
         { headers: headers },
       );
-      setFriendRequests(friendRequestsResponse.data);
+      setPendingFriendRequests(friendRequestsResponse.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const fetchSentFriendRequests = async () => {
+    try {
+      const friendRequestsResponse = await axios.get<FriendRequest[]>(
+        `${API_URL}/sent_friend_requests`,
+        { headers: headers },
+      );
+      setSentFriendRequests(friendRequestsResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -52,7 +75,8 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
 
   useEffect(() => {
     if (userEmail) {
-      fetchFriendRequests();
+      fetchPendingFriendRequests();
+      fetchSentFriendRequests();
     }
   }, []);
 
@@ -103,7 +127,9 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
         { friend_mail: friendMail },
         { headers: headers },
       );
-      setFriendRequests((prev) => prev.filter((f) => f.mail !== friendMail));
+      setPendingFriendRequests((prev) =>
+        prev.filter((f) => f.mail !== friendMail),
+      );
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
@@ -112,7 +138,9 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   const handleDeclineRequest = async (friendMail: string) => {
     try {
       await axios.delete(`${API_URL}/decline_friend_request/${123}`);
-      setFriendRequests((prev) => prev.filter((f) => f.mail !== friendMail));
+      setPendingFriendRequests((prev) =>
+        prev.filter((f) => f.mail !== friendMail),
+      );
     } catch (error) {
       console.error("Error declining friend request:", error);
     }
@@ -137,7 +165,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
       sx={{ display: "flex", justifyContent: "space-between", gap: 2, p: 3 }}
     >
       {/* Left side - Friend Requests */}
-      <Paper elevation={3} sx={{ width: "100%", p: 2 }}>
+      <Paper elevation={3} sx={{ width: "70%", p: 3 }}>
         <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
           Friend Requests
         </Typography>
@@ -151,51 +179,111 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
             Send Friend Request
           </Button>
         </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 2,
+            p: 3,
+          }}
+        >
+          <TableContainer>
+            <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
+              Pending
+            </Typography>
+            <Table component={Paper}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {pendingFriendRequests.length > 0 ? (
+                  pendingFriendRequests.map((request) => (
+                    <TableRow key={request.name}>
+                      <TableCell>{request.name}</TableCell>
+                      <TableCell>{request.mail}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", justifyContent: "start" }}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleAcceptRequest(request.mail)}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="secondary"
+                            sx={{ ml: 1 }}
+                            onClick={() => handleDeclineRequest(request.mail)}
+                          >
+                            Decline
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No requests
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
-        <List>
-          {friendRequests.length > 0 ? (
-            friendRequests.map((request) => (
-              <ListItem
-                key={request.name}
-                sx={{ justifyContent: "space-between", display: "flex" }}
-              >
-                <Typography variant="subtitle1">{request.name}</Typography>
-                <Typography variant="subtitle1">{request.mail}</Typography>
-                <div>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                      handleAcceptRequest(request.mail);
-                    }}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    sx={{ ml: 1 }}
-                    onClick={() => {
-                      handleDeclineRequest(request.mail);
-                    }}
-                  >
-                    Decline
-                  </Button>
-                </div>
-              </ListItem>
-            ))
-          ) : (
-            <Typography sx={{ textAlign: "center" }}>No requests</Typography>
-          )}
-        </List>
+          <TableContainer>
+            <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
+              Sent
+            </Typography>
+            <Table component={Paper}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sentFriendRequests.length > 0 ? (
+                  sentFriendRequests.map((request) => (
+                    <TableRow key={request.name}>
+                      <TableCell>{request.name}</TableCell>
+                      <TableCell>{request.mail}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          color="secondary"
+                          onClick={() => handleDeclineRequest(request.mail)}
+                        >
+                          Remove
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No requests
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
       </Paper>
-
       {/* Right side - Friends List */}
-      <Paper elevation={3} sx={{ width: "100%", p: 2 }}>
+      <Paper elevation={3} sx={{ width: "30%", p: 2 }}>
         <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
           My Friends
         </Typography>
-        <List>
+        <List component={Paper}>
           {friends.length > 0 ? (
             friends.map((friend) => (
               <ListItem
@@ -203,6 +291,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
                 sx={{ justifyContent: "space-between", display: "flex" }}
               >
                 <Typography variant="subtitle1">{friend.name}</Typography>
+                <Typography variant="subtitle1">{friend.mail}</Typography>
                 <Button
                   variant="contained"
                   color="secondary"

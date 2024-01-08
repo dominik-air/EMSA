@@ -109,7 +109,7 @@ const GroupList: React.FC<GroupListProps> = ({ userEmail, onGroupClick }) => {
               sx={{ justifyContent: "center", display: "flex" }}
             >
               <ListItemButton
-                sx={{ textAlign: "center", justifyContent: "center" }}
+                sx={{ textAlign: "center", justifyContent: "center", border: 1, borderRadius: 2 }}
                 onClick={() => handleGroupClickInternal(group)}
               >
                 {group.name}
