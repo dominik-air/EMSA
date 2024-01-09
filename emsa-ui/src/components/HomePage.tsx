@@ -30,7 +30,10 @@ export default function HomePage() {
   const API_URL = import.meta.env.VITE_API_URL;
   const { logout, email } = useAuth();
   const drawerWidth = 240;
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(() => {
+    const savedTab = localStorage.getItem('selectedTab');
+    return savedTab ? parseInt(savedTab, 10) : 0;
+  });
   const [activeGroup, setActiveGroup] = useState<Group | null>(null);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
@@ -83,6 +86,11 @@ export default function HomePage() {
   useEffect(() => {
     initActiveGroup();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('selectedTab', selectedTab.toString());
+  }, [selectedTab]);
+
 
   return (
     <ThemeProvider theme={useCustomTheme()}>
