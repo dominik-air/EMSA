@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
-  List,
-  ListItem,
   Button,
   Typography,
   Dialog,
@@ -12,6 +10,12 @@ import {
   DialogActions,
   TextField,
   Paper,
+  Table,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
 } from "@mui/material";
 
 interface Friend {
@@ -24,37 +28,44 @@ interface FriendRequest {
   mail: string;
 }
 
-interface FriendRequestsProps {
-  userEmail: string;
-}
-
-const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
+const FriendRequests: React.FC = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [sentFriendRequests, setSentFriendRequests] = useState<FriendRequest[]>(
+    [],
+  );
+  const [pendingFriendRequests, setPendingFriendRequests] = useState<
+    FriendRequest[]
+  >([]);
   const [newFriendEmail, setNewFriendEmail] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
-  const fetchFriendRequests = async () => {
+  const fetchPendingFriendRequests = async () => {
     try {
       const friendRequestsResponse = await axios.get<FriendRequest[]>(
         `${API_URL}/pending_friend_requests`,
         { headers: headers },
       );
-      setFriendRequests(friendRequestsResponse.data);
+      setPendingFriendRequests(friendRequestsResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
 
-  useEffect(() => {
-    if (userEmail) {
-      fetchFriendRequests();
+  const fetchSentFriendRequests = async () => {
+    try {
+      const friendRequestsResponse = await axios.get<FriendRequest[]>(
+        `${API_URL}/sent_friend_requests`,
+        { headers: headers },
+      );
+      setSentFriendRequests(friendRequestsResponse.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
-  }, []);
+  };
 
   const fetchFriends = async () => {
     try {
@@ -69,22 +80,28 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   };
 
   useEffect(() => {
-    if (userEmail) {
+    fetchPendingFriendRequests();
+    fetchSentFriendRequests();
+    fetchFriends();
+    const interval = setInterval(() => {
+      fetchPendingFriendRequests();
+      fetchSentFriendRequests();
       fetchFriends();
-    }
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleSendRequest = async () => {
     try {
       await axios.post(
         `${API_URL}/create_friend_request`,
-        {
-          friend_mail: newFriendEmail,
-        },
+        { friend_mail: newFriendEmail },
         { headers: headers },
       );
       setIsDialogOpen(false);
       setNewFriendEmail("");
+      fetchSentFriendRequests();
     } catch (error) {
       console.error("Error sending friend request:", error);
     }
@@ -96,14 +113,17 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   };
 
   const handleAcceptRequest = async (friendMail: string) => {
-    console.log(`callled with ${friendMail}`);
+    console.log(`called with ${friendMail}`);
     try {
       await axios.post(
         `${API_URL}/add_friend`,
         { friend_mail: friendMail },
         { headers: headers },
       );
-      setFriendRequests((prev) => prev.filter((f) => f.mail !== friendMail));
+      setPendingFriendRequests((prev) =>
+        prev.filter((f) => f.mail !== friendMail),
+      );
+      fetchFriends();
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
@@ -111,10 +131,29 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
 
   const handleDeclineRequest = async (friendMail: string) => {
     try {
-      await axios.delete(`${API_URL}/decline_friend_request/${123}`);
-      setFriendRequests((prev) => prev.filter((f) => f.mail !== friendMail));
+      await axios.delete(
+        `${API_URL}/decline_friend_request/${encodeURIComponent(friendMail)}`,
+        { headers: headers },
+      );
+      setPendingFriendRequests((prev) =>
+        prev.filter((f) => f.mail !== friendMail),
+      );
     } catch (error) {
       console.error("Error declining friend request:", error);
+    }
+  };
+
+  const handleRemoveRequest = async (friendMail: string) => {
+    try {
+      await axios.delete(
+        `${API_URL}/remove_friend_request/${encodeURIComponent(friendMail)}`,
+        { headers: headers },
+      );
+      setSentFriendRequests((prev) =>
+        prev.filter((f) => f.mail !== friendMail),
+      );
+    } catch (error) {
+      console.error("Error removing friend request:", error);
     }
   };
 
@@ -137,7 +176,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
       sx={{ display: "flex", justifyContent: "space-between", gap: 2, p: 3 }}
     >
       {/* Left side - Friend Requests */}
-      <Paper elevation={3} sx={{ width: "100%", p: 2 }}>
+      <Paper elevation={3} sx={{ width: "70%", p: 3 }}>
         <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
           Friend Requests
         </Typography>
@@ -152,70 +191,147 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
           </Button>
         </Box>
 
-        <List>
-          {friendRequests.length > 0 ? (
-            friendRequests.map((request) => (
-              <ListItem
-                key={request.name}
-                sx={{ justifyContent: "space-between", display: "flex" }}
-              >
-                <Typography variant="subtitle1">{request.name}</Typography>
-                <Typography variant="subtitle1">{request.mail}</Typography>
-                <div>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                      handleAcceptRequest(request.mail);
-                    }}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="secondary"
-                    sx={{ ml: 1 }}
-                    onClick={() => {
-                      handleDeclineRequest(request.mail);
-                    }}
-                  >
-                    Decline
-                  </Button>
-                </div>
-              </ListItem>
-            ))
-          ) : (
-            <Typography sx={{ textAlign: "center" }}>No requests</Typography>
-          )}
-        </List>
-      </Paper>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 2,
+            p: 3,
+          }}
+        >
+          <TableContainer component={Paper}>
+            <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
+              Pending
+            </Typography>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {pendingFriendRequests.length > 0 ? (
+                  pendingFriendRequests.map((request) => (
+                    <TableRow key={request.name}>
+                      <TableCell>{request.name}</TableCell>
+                      <TableCell>{request.mail}</TableCell>
+                      <TableCell>
+                        <Box sx={{ display: "flex", justifyContent: "start" }}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => handleAcceptRequest(request.mail)}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            sx={{ ml: 1 }}
+                            onClick={() => handleDeclineRequest(request.mail)}
+                          >
+                            Decline
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No requests
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
+          <TableContainer component={Paper}>
+            <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
+              Sent
+            </Typography>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Email</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {sentFriendRequests.length > 0 ? (
+                  sentFriendRequests.map((request) => (
+                    <TableRow key={request.name}>
+                      <TableCell>{request.name}</TableCell>
+                      <TableCell>{request.mail}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          onClick={() => handleRemoveRequest(request.mail)}
+                        >
+                          Remove
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No requests
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Paper>
       {/* Right side - Friends List */}
-      <Paper elevation={3} sx={{ width: "100%", p: 2 }}>
+      <Paper elevation={3} sx={{ width: "30%", p: 2 }}>
         <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
           My Friends
         </Typography>
-        <List>
-          {friends.length > 0 ? (
-            friends.map((friend) => (
-              <ListItem
-                key={friend.name}
-                sx={{ justifyContent: "space-between", display: "flex" }}
-              >
-                <Typography variant="subtitle1">{friend.name}</Typography>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => handleRemoveFriend(friend.mail)}
-                >
-                  Remove
-                </Button>
-              </ListItem>
-            ))
-          ) : (
-            <Typography sx={{ textAlign: "center" }}>No friends</Typography>
-          )}
-        </List>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {friends.length > 0 ? (
+                friends.map((friend) => (
+                  <TableRow key={friend.name}>
+                    <TableCell>{friend.name}</TableCell>
+                    <TableCell>{friend.mail}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => handleRemoveFriend(friend.mail)}
+                      >
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    No friends
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
 
       {/* Dialog for sending friend requests */}

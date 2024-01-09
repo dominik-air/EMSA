@@ -17,6 +17,7 @@ import GroupList from "./GroupList";
 import ManageMemes from "./ManageMemes";
 import MembersList from "./MembersList";
 import FriendRequests from "./FriendRequests";
+import AccountDetails from "./Account";
 import logo from "../assets/emsa-logo.png";
 
 interface Group {
@@ -29,7 +30,10 @@ export default function HomePage() {
   const API_URL = import.meta.env.VITE_API_URL;
   const { logout, email } = useAuth();
   const drawerWidth = 240;
-  const [selectedTab, setSelectedTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(() => {
+    const savedTab = localStorage.getItem("selectedTab");
+    return savedTab ? parseInt(savedTab, 10) : 0;
+  });
   const [activeGroup, setActiveGroup] = useState<Group | null>(null);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
@@ -75,13 +79,17 @@ export default function HomePage() {
       })
       .catch((error) => {
         console.error("Error fetching user groups:", error);
-        setActiveGroup({ id: -1, name: "no groups", owner_mail: email });
+        setActiveGroup(null);
       });
   };
 
   useEffect(() => {
     initActiveGroup();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("selectedTab", selectedTab.toString());
+  }, [selectedTab]);
 
   return (
     <ThemeProvider theme={useCustomTheme()}>
@@ -112,6 +120,7 @@ export default function HomePage() {
             >
               <Tab label="Memes" />
               <Tab label="Friends" />
+              <Tab label="Account" />
             </Tabs>
           </Box>
           <Button color="inherit" onClick={handleLogout}>
@@ -138,10 +147,12 @@ export default function HomePage() {
               <GroupList userEmail={email} onGroupClick={handleGroupClick} />
             </Drawer>
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-              <ManageMemes
-                groupName={activeGroup?.name ?? "no group"}
-                groupId={activeGroup?.id ?? -1}
-              />
+              {activeGroup && (
+                <ManageMemes
+                  groupName={activeGroup.name}
+                  groupId={activeGroup.id}
+                />
+              )}
             </Box>
             <Drawer
               variant="permanent"
@@ -157,13 +168,23 @@ export default function HomePage() {
               }}
             >
               <Toolbar />
-              <MembersList groupId={activeGroup?.id ?? -1} />
+              {activeGroup && (
+                <MembersList
+                  groupId={activeGroup.id}
+                  isOwner={activeGroup.owner_mail === email}
+                />
+              )}
             </Drawer>
           </>
         )}
         {selectedTab === 1 && (
           <Box sx={{ flexGrow: 1, p: 3 }}>
-            <FriendRequests userEmail={email} />
+            <FriendRequests />
+          </Box>
+        )}
+        {selectedTab === 2 && (
+          <Box sx={{ flexGrow: 1, p: 3 }}>
+            <AccountDetails />
           </Box>
         )}
       </Box>

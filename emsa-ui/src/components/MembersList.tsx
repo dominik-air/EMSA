@@ -28,36 +28,38 @@ interface Friend {
 
 interface MembersListProps {
   groupId: number;
+  isOwner: boolean;
 }
 
-const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
+const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
+  const fetchMembers = async () => {
+    const response = await axios.get<Member[]>(
+      `${API_URL}/group_members/${groupId}`,
+      { headers: headers },
+    );
+    setMembers(response.data);
+  };
+
+  const fetchFriends = async () => {
+    const response = await axios.get<Friend[]>(`${API_URL}/user_friends`, {
+      headers: headers,
+    });
+    setFriends(response.data);
+  };
+
   useEffect(() => {
-    const fetchMembers = async () => {
-      const response = await axios.get<Member[]>(
-        `${API_URL}/group_members/${groupId}`,
-        { headers: headers },
-      );
-      setMembers(response.data);
-    };
-
-    const fetchFriends = async () => {
-      const response = await axios.get<Friend[]>(`${API_URL}/user_friends`, {
-        headers: headers,
-      });
-      setFriends(response.data);
-    };
-
     fetchMembers();
     fetchFriends();
   }, [API_URL, groupId]);
@@ -70,7 +72,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
     setAddMemberDialogOpen(false);
   };
 
-  const handleClickOpen = (member: string) => {
+  const handleClickOpen = (member: Member) => {
     setSelectedMember(member);
     setOpen(true);
   };
@@ -97,6 +99,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
         { headers: headers },
       );
       console.log(response);
+      fetchMembers();
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -105,6 +108,26 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
   const handleAddFriendsToGroup = async () => {
     await addFriendsToGroup();
     handleCloseAddMemberDialog();
+  };
+
+  const handleRemoveMember = async (memberMail: string) => {
+    console.log(
+      `${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`,
+    );
+    try {
+      await axios.delete(
+        `${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`,
+        {
+          headers: headers,
+        },
+      );
+      setMembers((prev) => prev.filter((m) => m.mail !== memberMail));
+    } catch (error) {
+      console.error(
+        `Error while removing member ${memberMail} from group ${groupId}:`,
+        error,
+      );
+    }
   };
 
   return (
@@ -131,21 +154,55 @@ const MembersList: React.FC<MembersListProps> = ({ groupId }) => {
         {members.map((member, index) => (
           <ListItem
             key={index}
-            sx={{ justifyContent: "center", display: "flex" }}
+            sx={{
+              justifyContent: "center",
+              display: "flex",
+              position: "relative",
+              mb: 2,
+            }}
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
           >
             <ListItemButton
-              sx={{ textAlign: "center", justifyContent: "center" }}
-              onClick={() => handleClickOpen(member.name)}
+              sx={{
+                textAlign: "center",
+                justifyContent: "center",
+                border: 1,
+                borderRadius: 2,
+                width: "60%",
+                mr: 1,
+              }}
+              onClick={() => handleClickOpen(member)}
             >
               {member.name}
             </ListItemButton>
+            {isOwner && hoveredIndex === index && (
+              <Button
+                variant="contained"
+                color="secondary"
+                sx={{
+                  textAlign: "center",
+                  justifyContent: "center",
+                  border: 1,
+                  borderRadius: 2,
+                  width: "39%",
+                  ml: 1,
+                }}
+                onClick={() => handleRemoveMember(member.mail)}
+              >
+                Remove
+              </Button>
+            )}
           </ListItem>
         ))}
       </List>
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Member Details</DialogTitle>
         <DialogContent>
-          <DialogContentText>Details for {selectedMember}.</DialogContentText>
+          <DialogContentText>
+            Details for {selectedMember?.name}.
+          </DialogContentText>
+          <DialogContentText>Email: {selectedMember?.mail}.</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
