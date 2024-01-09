@@ -130,7 +130,8 @@ async def add_image(
     db: AsyncSession = Depends(get_db),
     current_user: PublicUser = Depends(get_current_active_user),
 ) -> MediaCreate:
-    if len(await image.read()) >= 2 * 1024 * 1024:
+    image_bytes = await image.read()
+    if len(image_bytes) >= 2 * 1024 * 1024:
         raise HTTPException(
             status_code=413, detail="File size exceeds the allowed limit of 2MB"
         )
@@ -158,7 +159,6 @@ async def add_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
-    image_bytes = await image.read()
     cloud_storage = CloudStorage()
     try:
         media_cloud_key = await cloud_storage.upload_image(
