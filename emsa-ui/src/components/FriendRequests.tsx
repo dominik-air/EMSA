@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   Box,
-  List,
-  ListItem,
   Button,
   Typography,
   Dialog,
@@ -30,11 +28,7 @@ interface FriendRequest {
   mail: string;
 }
 
-interface FriendRequestsProps {
-  userEmail: string;
-}
-
-const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
+const FriendRequests: React.FC = () => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [friends, setFriends] = useState<Friend[]>([]);
   const [sentFriendRequests, setSentFriendRequests] = useState<FriendRequest[]>(
@@ -73,13 +67,6 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
     }
   };
 
-  useEffect(() => {
-    if (userEmail) {
-      fetchPendingFriendRequests();
-      fetchSentFriendRequests();
-    }
-  }, []);
-
   const fetchFriends = async () => {
     try {
       const friendsResponse = await axios.get<Friend[]>(
@@ -93,22 +80,28 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   };
 
   useEffect(() => {
-    if (userEmail) {
+    fetchPendingFriendRequests();
+    fetchSentFriendRequests();
+    fetchFriends();
+    const interval = setInterval(() => {
+      fetchPendingFriendRequests();
+      fetchSentFriendRequests();
       fetchFriends();
-    }
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleSendRequest = async () => {
     try {
       await axios.post(
         `${API_URL}/create_friend_request`,
-        {
-          friend_mail: newFriendEmail,
-        },
+        { friend_mail: newFriendEmail },
         { headers: headers },
       );
       setIsDialogOpen(false);
       setNewFriendEmail("");
+      fetchSentFriendRequests();
     } catch (error) {
       console.error("Error sending friend request:", error);
     }
@@ -120,7 +113,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
   };
 
   const handleAcceptRequest = async (friendMail: string) => {
-    console.log(`callled with ${friendMail}`);
+    console.log(`called with ${friendMail}`);
     try {
       await axios.post(
         `${API_URL}/add_friend`,
@@ -130,6 +123,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
       setPendingFriendRequests((prev) =>
         prev.filter((f) => f.mail !== friendMail),
       );
+      fetchFriends();
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
@@ -137,12 +131,29 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
 
   const handleDeclineRequest = async (friendMail: string) => {
     try {
-      await axios.delete(`${API_URL}/decline_friend_request/${123}`);
+      await axios.delete(
+        `${API_URL}/decline_friend_request/${encodeURIComponent(friendMail)}`,
+        { headers: headers },
+      );
       setPendingFriendRequests((prev) =>
         prev.filter((f) => f.mail !== friendMail),
       );
     } catch (error) {
       console.error("Error declining friend request:", error);
+    }
+  };
+
+  const handleRemoveRequest = async (friendMail: string) => {
+    try {
+      await axios.delete(
+        `${API_URL}/remove_friend_request/${encodeURIComponent(friendMail)}`,
+        { headers: headers },
+      );
+      setSentFriendRequests((prev) =>
+        prev.filter((f) => f.mail !== friendMail),
+      );
+    } catch (error) {
+      console.error("Error removing friend request:", error);
     }
   };
 
@@ -179,6 +190,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
             Send Friend Request
           </Button>
         </Box>
+
         <Box
           sx={{
             display: "flex",
@@ -187,11 +199,11 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
             p: 3,
           }}
         >
-          <TableContainer>
+          <TableContainer component={Paper}>
             <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
               Pending
             </Typography>
-            <Table component={Paper}>
+            <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
@@ -237,11 +249,11 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
             </Table>
           </TableContainer>
 
-          <TableContainer>
+          <TableContainer component={Paper}>
             <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
               Sent
             </Typography>
-            <Table component={Paper}>
+            <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Name</TableCell>
@@ -259,7 +271,7 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
                         <Button
                           variant="contained"
                           color="secondary"
-                          onClick={() => handleDeclineRequest(request.mail)}
+                          onClick={() => handleRemoveRequest(request.mail)}
                         >
                           Remove
                         </Button>
@@ -283,28 +295,43 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({ userEmail }) => {
         <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
           My Friends
         </Typography>
-        <List component={Paper}>
-          {friends.length > 0 ? (
-            friends.map((friend) => (
-              <ListItem
-                key={friend.name}
-                sx={{ justifyContent: "space-between", display: "flex" }}
-              >
-                <Typography variant="subtitle1">{friend.name}</Typography>
-                <Typography variant="subtitle1">{friend.name}</Typography>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => handleRemoveFriend(friend.mail)}
-                >
-                  Remove
-                </Button>
-              </ListItem>
-            ))
-          ) : (
-            <Typography sx={{ textAlign: "center" }}>No friends</Typography>
-          )}
-        </List>
+
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {friends.length > 0 ? (
+                friends.map((friend) => (
+                  <TableRow key={friend.name}>
+                    <TableCell>{friend.name}</TableCell>
+                    <TableCell>{friend.mail}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => handleRemoveFriend(friend.mail)}
+                      >
+                        Remove
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    No friends
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Paper>
 
       {/* Dialog for sending friend requests */}

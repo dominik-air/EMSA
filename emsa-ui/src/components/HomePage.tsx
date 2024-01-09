@@ -165,7 +165,7 @@ export default function HomePage() {
         )}
         {selectedTab === 1 && (
           <Box sx={{ flexGrow: 1, p: 3 }}>
-            <FriendRequests userEmail={email} />
+            <FriendRequests />
           </Box>
         )}
         {selectedTab === 2 && (
