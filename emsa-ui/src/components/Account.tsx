@@ -20,7 +20,7 @@ interface AccountDetails {
 
 interface AccountUpdate {
   name: string;
-  password: string;
+  password_hash: string;
 }
 
 interface AccountStatistics {
@@ -29,44 +29,99 @@ interface AccountStatistics {
 }
 
 const AccountComponent: React.FC = () => {
-  const [details, setDetails] = useState<AccountDetails>({
-    name: "Dominik",
-    mail: "dzurek@comarch.pl",
-  });
+  const API_URL = import.meta.env.VITE_API_URL;
+  const [details, setDetails] = useState<AccountDetails | null>(null);
   const [updateDetails, setUpdateDetails] = useState<AccountUpdate>({
     name: "",
-    password: "",
+    password_hash: "",
   });
   const [statistics, setStatistics] = useState<AccountStatistics>({
-    numberOfFriends: 3,
-    numberOfGroups: 1,
+    numberOfFriends: 0,
+    numberOfGroups: 0,
   });
+  const headers = {
+    Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
+  };
 
   useEffect(() => {
-    // Fetch account details and statistics
-    axios.get("/api/account/details").then((response) => {
-      setDetails(response.data);
-    });
-
-    axios.get("/api/account/statistics").then((response) => {
-      setStatistics(response.data);
-    });
+    axios
+      .get<AccountDetails>(`${API_URL}/user_details`, { headers: headers })
+      .then((response) => {
+        setDetails(response.data);
+      });
   }, []);
 
   const handleUpdateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUpdateDetails({ ...updateDetails, [e.target.name]: e.target.value });
   };
 
+  const fetchAccountDetails = async (): Promise<AccountDetails | null> => {
+    try {
+      const response = await axios.get<AccountDetails>(
+        `${API_URL}/user_details`,
+        { headers: headers },
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error while fetching friends count:", error);
+      return null;
+    }
+  };
+
+  const fetchFriendsCount = async (): Promise<number> => {
+    try {
+      const response = await axios.get<string[]>(`${API_URL}/user_friends`, {
+        headers: headers,
+      });
+      return response.data.length;
+    } catch (error) {
+      console.error("Error while fetching friends count:", error);
+      return 0;
+    }
+  };
+
+  const fetchGroupsCount = async (): Promise<number> => {
+    try {
+      const response = await axios.get<[]>(`${API_URL}/user_groups`, {
+        headers: headers,
+      });
+      return response.data.length;
+    } catch (error) {
+      console.error("Error while fetching groups count:", error);
+      return 0;
+    }
+  };
+
+  const loadStatistics = async () => {
+    const friendsCount = await fetchFriendsCount();
+    const groupsCount = await fetchGroupsCount();
+    setStatistics({
+      numberOfFriends: friendsCount,
+      numberOfGroups: groupsCount,
+    });
+  };
+
+  useEffect(() => {
+    fetchAccountDetails();
+    loadStatistics();
+    const interval = setInterval(() => {
+      fetchAccountDetails();
+      loadStatistics();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleUpdateSubmit = () => {
+    // TODO: finish after #76 is fixed
+    console.log(updateDetails);
     axios
-      .put("/api/account/update", updateDetails)
+      .put(`${API_URL}/update_account`, updateDetails, { headers: headers })
       .then((response) => {
-        // Handle successful update
         console.log(response);
         alert("Account details updated successfully!");
       })
       .catch((error) => {
-        // Handle error
         console.error(error);
         alert("Failed to update account details.");
       });
@@ -81,21 +136,22 @@ const AccountComponent: React.FC = () => {
         <Typography variant="h6" sx={{ textAlign: "center", mb: 2 }}>
           Account Details
         </Typography>
-        <TableContainer component={Paper}>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell align="right">{details.name}</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>Email</TableCell>
-                <TableCell align="right">{details.mail}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-
+        {details && (
+          <TableContainer component={Paper}>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell align="right">{details.name}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Email</TableCell>
+                  <TableCell align="right">{details.mail}</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
         <Typography variant="h6" sx={{ textAlign: "center", mb: 2, mt: 2 }}>
           Statistics
         </Typography>
@@ -132,9 +188,9 @@ const AccountComponent: React.FC = () => {
         />
         <TextField
           label="New Password"
-          name="password"
+          name="password_hash"
           type="password"
-          value={updateDetails.password}
+          value={updateDetails.password_hash}
           onChange={handleUpdateChange}
           fullWidth
           margin="normal"
