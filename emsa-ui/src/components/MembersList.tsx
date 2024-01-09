@@ -34,7 +34,7 @@ interface MembersListProps {
 const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
   const API_URL = import.meta.env.VITE_API_URL;
   const [open, setOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
@@ -72,7 +72,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
     setAddMemberDialogOpen(false);
   };
 
-  const handleClickOpen = (member: string) => {
+  const handleClickOpen = (member: Member) => {
     setSelectedMember(member);
     setOpen(true);
   };
@@ -104,18 +104,24 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
     }
   };
 
-  const removeMember = async () => {
-    console.log("removed!!!");
-  };
-
   const handleAddFriendsToGroup = async () => {
     await addFriendsToGroup();
     handleCloseAddMemberDialog();
   };
 
-  const handleRemoveMember = async (name: string) => {
-    console.log(name);
-    await removeMember();
+  const handleRemoveMember = async (memberMail: string) => {
+    console.log(`${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`)
+    try {
+      await axios.delete(`${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`, {
+        headers: headers,
+      });
+      setMembers((prev) =>
+      prev.filter((m) => m.mail !== memberMail),)
+    }
+    catch (error) {
+      console.error(`Error while removing member ${memberMail} from group ${groupId}:`, error);
+    }
+
   };
 
   return (
@@ -160,7 +166,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
                 width: "60%",
                 mr: 1,
               }}
-              onClick={() => handleClickOpen(member.name)}
+              onClick={() => handleClickOpen(member)}
             >
               {member.name}
             </ListItemButton>
@@ -176,7 +182,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
                   width: "39%",
                   ml: 1,
                 }}
-                onClick={() => handleRemoveMember(member.name)}
+                onClick={() => handleRemoveMember(member.mail)}
               >
                 Remove
               </Button>
@@ -187,7 +193,8 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Member Details</DialogTitle>
         <DialogContent>
-          <DialogContentText>Details for {selectedMember}.</DialogContentText>
+          <DialogContentText>Details for {selectedMember?.name}.</DialogContentText>
+          <DialogContentText>Email: {selectedMember?.mail}.</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
