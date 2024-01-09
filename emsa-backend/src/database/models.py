@@ -162,8 +162,12 @@ class Media(Base, TimestampMixin):
     group_id: int = Column(Integer, ForeignKey("groups.id"), nullable=False)
     name: str = Column(String, nullable=False, default="")
     is_image: bool = Column(Boolean, nullable=False)
+    # todo: when MVP is done remove image_path (all logic can be simplified to is_image and link)
+    #       but FE will need to be adjusted after that
     image_path: str = Column(String)
     link: str = Column(String)
+    preview_link: str = Column(String, default="")
+    uploaded_by: str = Column(String(64), default="")
     tags: list[str] = Column(
         ARRAY(Text), nullable=False, default=cast(array([], type_=Text), ARRAY(Text))
     )
@@ -180,6 +184,7 @@ class Media(Base, TimestampMixin):
             f"is_image={self.is_image}, "
             f"image_path={self.image_path}, "
             f"link={self.link}, "
+            f"preview_link={self.preview_link}, "
             f"tags={self.tags})>"
         )
 
@@ -191,5 +196,6 @@ class Media(Base, TimestampMixin):
             "is_image": self.is_image,
             "image_path": self.image_path,
             "link": self.link,
+            "preview_link": self.preview_link,
             "tags": self.tags,
         }

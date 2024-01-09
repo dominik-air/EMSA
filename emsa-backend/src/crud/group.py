@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class GroupCRUD:
     @staticmethod
     async def create_group(group: GroupCreate, db: AsyncSession) -> GroupGet:
+        if group.name.lower() == "thumbnails":
+            group.name = "thumbnails."
         query = insert(Group).returning(Group).values(**group.model_dump())
         result = await db.execute(query)
         row = result.fetchone()
@@ -50,6 +52,8 @@ class GroupCRUD:
     async def update_group(
         group_id: int, group: GroupUpdate, db: AsyncSession
     ) -> GroupGet:
+        if group.name and group.name.lower() == "thumbnails":
+            group.name = "thumbnails."
         query = (
             update(Group)
             .values(**group.model_dump())

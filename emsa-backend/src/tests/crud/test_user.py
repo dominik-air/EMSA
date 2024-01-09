@@ -2,7 +2,8 @@ import pytest
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.user import FriendCRUD, UserCRUD
+from src.crud.friend import FriendCRUD
+from src.crud.user import UserCRUD
 from src.database.models import FriendRequest, Friendship, User
 from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser, UpdateUser
 from src.tests.conftest import USER_1, USER_2

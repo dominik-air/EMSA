@@ -14,6 +14,7 @@ from src.services.cloud_storage import (
     FailedToDeleteImageException,
     FailedToUploadImageException,
 )
+from src.services.preview_generator import link_preview_generator, preview_link_upload
 from src.services.tag_proposer import propose_tag_from_link, propose_tags_from_name
 
 logging.basicConfig(level=logging.ERROR)
@@ -70,7 +71,7 @@ async def proposed_tags(
 async def add_link(
     link_media: AddLinkRequest,
     db: AsyncSession = Depends(get_db),
-    _: PublicUser = Depends(get_current_active_user),
+    current_user: PublicUser = Depends(get_current_active_user),
 ) -> MediaGet:
     media_db_data = MediaCreate(
         group_id=link_media.group_id,
@@ -78,12 +79,30 @@ async def add_link(
         image_path="",
         link=link_media.link,
         name=link_media.name,
+        uploaded_by=current_user.mail,
         tags=link_media.tags,
     )
     try:
-        return await MediaCRUD.create_media(media_db_data, db)
+        media = await MediaCRUD.create_media(media_db_data, db)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    thumbnail = await link_preview_generator(link_media.link)
+    if isinstance(thumbnail, bytes):
+        preview_link = await preview_link_upload(thumbnail, media.id)
+    else:
+        preview_link = thumbnail
+
+    try:
+        return await MediaCRUD.update_media(
+            media.id,
+            MediaUpdate(preview_link=preview_link),
+            db,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.post(
@@ -126,6 +145,7 @@ async def add_image(
         image_path="placeholder",
         link="",
         name=name,
+        uploaded_by=current_user.mail,
         tags=tags,
     )
     try:
@@ -155,7 +175,9 @@ async def add_image(
 
     try:
         return await MediaCRUD.update_media(
-            media.id, MediaUpdate(image_path=media_cloud_key), db
+            media.id,
+            MediaUpdate(image_path=media_cloud_key, preview_link=media_cloud_key),
+            db,
         )
     except ValueError as e:
         raise HTTPException(

@@ -3,7 +3,8 @@ from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.crud.user import FriendCRUD, UserCRUD
+from src.crud.friend import FriendCRUD
+from src.crud.user import UserCRUD
 from src.routes.contracts import AddFriendRequest
 from src.tests.conftest import (
     USER_1,
@@ -83,6 +84,22 @@ async def test_login_bad_request(
     response = await client.post("/login", json=user_data)
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.asyncio
+async def test_user_details(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    response = await client.get(
+        "/user_details",
+        headers=await headers_for_user1(db_session),
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {
+        "mail": USER_1.mail,
+        "name": USER_1.name,
+    }
 
 
 @pytest.mark.asyncio
@@ -291,6 +308,102 @@ async def test_add_friend(
     assert response.status_code == status.HTTP_201_CREATED
     assert len(friends_after) == len(friends_before) + 1
     assert not response.json()
+
+
+@pytest.mark.asyncio
+async def test_add_friend_deletes_friend_request(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    # user 4 sends friend request to user 1
+    await FriendCRUD.create_friend_request(USER_4.mail, USER_1.mail, db_session)
+
+    # Check that the friend request exists before adding the friend
+    friend_request_before = await FriendCRUD.get_pending_requests(
+        USER_1.mail, db_session
+    )
+    assert USER_4.mail in [request.mail for request in friend_request_before]
+
+    response = await client.post(
+        "/add_friend",
+        json={"friend_mail": USER_4.mail},
+        headers=await headers_for_user1(db_session),
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    # Check that the friend request is deleted after adding the friend
+    friend_request_after = await FriendCRUD.get_pending_requests(
+        USER_1.mail, db_session
+    )
+    friend_sent_request_after = await FriendCRUD.get_sent_requests(
+        USER_1.mail, db_session
+    )
+    assert USER_4.mail not in [request.mail for request in friend_request_after]
+    assert USER_1.mail not in [request.mail for request in friend_sent_request_after]
+
+
+@pytest.mark.asyncio
+async def test_decline_friend_request(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    # user 1 sends friend request to user 4
+    await FriendCRUD.create_friend_request(USER_1.mail, USER_4.mail, db_session)
+    # user 4 declines friend request from user 1
+    response = await client.delete(
+        f"/decline_friend_request/{USER_1.mail}",
+        headers=await headers_for_user4(db_session),
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    # Check that the friend request is deleted after declining
+    friend_request_after = await FriendCRUD.get_pending_requests(
+        USER_4.mail, db_session
+    )
+    friend_sent_request_after = await FriendCRUD.get_sent_requests(
+        USER_1.mail, db_session
+    )
+    assert USER_1.mail not in [request.mail for request in friend_request_after]
+    assert USER_4.mail not in [request.mail for request in friend_sent_request_after]
+
+
+@pytest.mark.asyncio
+async def test_decline_friend_request_self_error(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    response = await client.delete(
+        f"/decline_friend_request/{USER_1.mail}",
+        headers=await headers_for_user1(db_session),
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Can't send friend request to yourself"
+
+
+@pytest.mark.asyncio
+async def test_decline_friend_request_not_found_error(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    await FriendCRUD.create_friend_request(USER_1.mail, USER_4.mail, db_session)
+    response = await client.delete(
+        "/decline_friend_request/nonexistentuser@example.com",
+        headers=await headers_for_user4(db_session),
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"].startswith("No user found with mail")
+
+
+@pytest.mark.asyncio
+async def test_decline_friend_request_no_sent_requests_error(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    # user 1 declines friend request from non-existing user
+    response = await client.delete(
+        f"/decline_friend_request/{USER_4.mail}",
+        headers=await headers_for_user1(db_session),
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Friend request doesn't exist"
 
 
 @pytest.mark.asyncio

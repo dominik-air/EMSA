@@ -12,6 +12,9 @@ RUN apt-get update && \
 COPY pyproject.toml poetry.lock /code/
 RUN pip install poetry && poetry config virtualenvs.create false && poetry install
 
+# Run the Playwright install command to download the necessary browser binaries
+RUN playwright install
+
 COPY . /code
 
 # Expose the port that FastAPI will run on

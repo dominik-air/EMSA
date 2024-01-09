@@ -64,6 +64,8 @@ class MediaCreate(BaseModel):
     image_path: str = ""
     link: str = ""
     name: str = ""
+    preview_link: str = ""
+    uploaded_by: str = ""
     tags: list[str] = []
 
 
@@ -80,6 +82,7 @@ class MediaUpdate(BaseModel):
     image_path: str | None = None
     link: str | None = None
     name: str | None = None
+    preview_link: str | None = None
 
 
 class MediaQuery(BaseModel):
