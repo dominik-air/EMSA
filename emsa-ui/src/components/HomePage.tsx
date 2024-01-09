@@ -31,7 +31,7 @@ export default function HomePage() {
   const { logout, email } = useAuth();
   const drawerWidth = 240;
   const [selectedTab, setSelectedTab] = useState(() => {
-    const savedTab = localStorage.getItem('selectedTab');
+    const savedTab = localStorage.getItem("selectedTab");
     return savedTab ? parseInt(savedTab, 10) : 0;
   });
   const [activeGroup, setActiveGroup] = useState<Group | null>(null);
@@ -79,7 +79,7 @@ export default function HomePage() {
       })
       .catch((error) => {
         console.error("Error fetching user groups:", error);
-        setActiveGroup({ id: -1, name: "no groups", owner_mail: email });
+        setActiveGroup(null);
       });
   };
 
@@ -88,9 +88,8 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('selectedTab', selectedTab.toString());
+    localStorage.setItem("selectedTab", selectedTab.toString());
   }, [selectedTab]);
-
 
   return (
     <ThemeProvider theme={useCustomTheme()}>
@@ -148,10 +147,12 @@ export default function HomePage() {
               <GroupList userEmail={email} onGroupClick={handleGroupClick} />
             </Drawer>
             <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-              <ManageMemes
-                groupName={activeGroup?.name ?? "no group"}
-                groupId={activeGroup?.id ?? -1}
-              />
+              {activeGroup && (
+                <ManageMemes
+                  groupName={activeGroup.name}
+                  groupId={activeGroup.id}
+                />
+              )}
             </Box>
             <Drawer
               variant="permanent"
@@ -167,7 +168,12 @@ export default function HomePage() {
               }}
             >
               <Toolbar />
-              <MembersList groupId={activeGroup?.id ?? -1} isOwner={true} />
+              {activeGroup && (
+                <MembersList
+                  groupId={activeGroup.id}
+                  isOwner={activeGroup.owner_mail === email}
+                />
+              )}
             </Drawer>
           </>
         )}

@@ -44,22 +44,22 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
 
+  const fetchMembers = async () => {
+    const response = await axios.get<Member[]>(
+      `${API_URL}/group_members/${groupId}`,
+      { headers: headers },
+    );
+    setMembers(response.data);
+  };
+
+  const fetchFriends = async () => {
+    const response = await axios.get<Friend[]>(`${API_URL}/user_friends`, {
+      headers: headers,
+    });
+    setFriends(response.data);
+  };
+
   useEffect(() => {
-    const fetchMembers = async () => {
-      const response = await axios.get<Member[]>(
-        `${API_URL}/group_members/${groupId}`,
-        { headers: headers },
-      );
-      setMembers(response.data);
-    };
-
-    const fetchFriends = async () => {
-      const response = await axios.get<Friend[]>(`${API_URL}/user_friends`, {
-        headers: headers,
-      });
-      setFriends(response.data);
-    };
-
     fetchMembers();
     fetchFriends();
   }, [API_URL, groupId]);
@@ -99,6 +99,7 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
         { headers: headers },
       );
       console.log(response);
+      fetchMembers();
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -110,18 +111,23 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
   };
 
   const handleRemoveMember = async (memberMail: string) => {
-    console.log(`${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`)
+    console.log(
+      `${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`,
+    );
     try {
-      await axios.delete(`${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`, {
-        headers: headers,
-      });
-      setMembers((prev) =>
-      prev.filter((m) => m.mail !== memberMail),)
+      await axios.delete(
+        `${API_URL}/remove_member/${groupId}/${encodeURIComponent(memberMail)}`,
+        {
+          headers: headers,
+        },
+      );
+      setMembers((prev) => prev.filter((m) => m.mail !== memberMail));
+    } catch (error) {
+      console.error(
+        `Error while removing member ${memberMail} from group ${groupId}:`,
+        error,
+      );
     }
-    catch (error) {
-      console.error(`Error while removing member ${memberMail} from group ${groupId}:`, error);
-    }
-
   };
 
   return (
@@ -193,7 +199,9 @@ const MembersList: React.FC<MembersListProps> = ({ groupId, isOwner }) => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Member Details</DialogTitle>
         <DialogContent>
-          <DialogContentText>Details for {selectedMember?.name}.</DialogContentText>
+          <DialogContentText>
+            Details for {selectedMember?.name}.
+          </DialogContentText>
           <DialogContentText>Email: {selectedMember?.mail}.</DialogContentText>
         </DialogContent>
         <DialogActions>
