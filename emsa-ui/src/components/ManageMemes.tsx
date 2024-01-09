@@ -18,16 +18,23 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import MemeGrid from "./MemeGrid";
 import { styled, alpha } from "@mui/material/styles";
-import { useDropzone } from "react-dropzone";
+import { FilePond, registerPlugin } from "react-filepond";
+import "filepond/dist/filepond.min.css";
+import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css";
+import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+import FilePondPluginFileEncode from "filepond-plugin-file-encode";
+import { FilePondFile } from "filepond";
 
+registerPlugin(
+  FilePondPluginImagePreview,
+  FilePondPluginFileValidateType,
+  FilePondPluginFileEncode,
+);
 interface Meme {
   type: "image" | "link";
   url: string;
   tags: string[];
-}
-
-interface FileWithPreview extends File {
-  preview: string;
 }
 
 const Search = styled("div")(({ theme }) => ({
@@ -99,9 +106,9 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [memeSource, setMemeSource] = useState<string>("");
   const [mediaName, setMediaName] = useState<string>("");
+  const [file, setFile] = useState<FilePondFile | null>(null);
   const [tags, setTags] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [files, setFiles] = useState<FileWithPreview[]>([]);
   const headers = {
     Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
   };
@@ -133,31 +140,20 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
     fetchMemes();
   }, [searchTerm, groupId, API_URL]);
 
-  const onDrop = (acceptedFiles: File[]) => {
-    setFiles(
-      acceptedFiles.map((file) =>
-        Object.assign(file, {
-          preview: URL.createObjectURL(file),
-        }),
-      ),
-    );
-  };
-  const { getRootProps, getInputProps } = useDropzone({ onDrop });
-
-  useEffect(() => {
-    files.forEach((file) => URL.revokeObjectURL(file.preview));
-  }, [files]);
-
   const handleDialogOpen = () => {
     setIsDialogOpen(true);
   };
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    setFiles([]);
     setMediaName("");
     setMemeSource("");
     setTags("");
+  };
+
+  const handleFileEncode = (file: FilePondFile) => {
+    setMediaName(file.filename.split(".")[0]);
+    setFile(file);
   };
 
   const sendMemeSource = async () => {
@@ -181,6 +177,51 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
         console.error("Unexpected error:", error);
       }
     }
+  };
+
+  const sendMemeImage = async () => {
+    if (!file) {
+      return;
+    }
+    if (file && file.file instanceof File) {
+      const fileURL = URL.createObjectURL(file.file);
+      window.open(fileURL, "_blank");
+    }
+    const form = new FormData();
+    form.append("group_id", String(groupId));
+    form.append("name", mediaName);
+    form.append("tags", JSON.stringify(tags));
+    form.append("image", file.file, file.filename);
+    console.log(file.file);
+    const headers = {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
+    };
+    try {
+      const response = await axios.post<MediaInfo>(
+        `${API_URL}/add_image`,
+        form,
+        { headers: headers },
+      );
+      console.log(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Error:", error);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+    }
+  };
+
+  const handleSendMedia = async () => {
+    if (file) {
+      await sendMemeImage();
+    } else if (memeSource) {
+      await sendMemeSource();
+    } else {
+      console.log("No media!");
+    }
+    handleDialogClose();
   };
 
   return (
@@ -244,36 +285,26 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
             value={tags}
             onChange={(e) => setTags(e.target.value)}
           />
-          <Box
-            {...getRootProps()}
-            sx={{
-              border: "1px dashed gray",
-              padding: "20px",
-              textAlign: "center",
+          <FilePond
+            allowMultiple={false}
+            maxFiles={1}
+            name="file"
+            acceptedFileTypes={["image/*"]}
+            labelIdle='Drag & Drop your image or <span class="filepond--label-action">Browse</span>'
+            onaddfile={(error, file) => {
+              if (error) {
+                console.error("Error while uploding file:", error);
+              } else {
+                handleFileEncode(file);
+              }
             }}
-          >
-            <input {...getInputProps()} />
-            <p>Drop your file here, or click to select files</p>
-            {files.length > 0 && (
-              <Box sx={{ mt: 2 }}>
-                {files.map((file) => (
-                  <div key={file.name}>
-                    <img
-                      src={file.preview}
-                      style={{ width: "100%" }}
-                      alt="Preview"
-                    />
-                  </div>
-                ))}
-              </Box>
-            )}
-          </Box>
+          />
         </DialogContent>
         <DialogActions>
           <Button variant="contained" onClick={handleDialogClose}>
             Cancel
           </Button>
-          <Button variant="contained" onClick={sendMemeSource}>
+          <Button variant="contained" onClick={handleSendMedia}>
             Add
           </Button>
         </DialogActions>
