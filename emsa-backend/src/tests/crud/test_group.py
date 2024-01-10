@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.crud.group import GroupCRUD
 from src.database.models import Group, user_group_association
 from src.database.schemas import GroupCreate, GroupGet, GroupUpdate, PrivateUser
-from src.tests.conftest import GROUP_1
+from src.tests.conftest import GROUP_1, USER_1
 
 
 @pytest.mark.asyncio
@@ -114,11 +114,10 @@ async def test_get_user_group(db_session: AsyncSession, two_users: list[PrivateU
 
 
 @pytest.mark.asyncio
-async def test_remove_member_from_group(
+async def test_remove_user_from_group(
     db_session: AsyncSession, two_users: list[PrivateUser]
 ):
     user_1, user_2 = two_users
-
     group_create = GroupCreate(name=GROUP_1.name, owner_mail=user_1.mail)
     created_group = await GroupCRUD.create_group(group_create, db_session)
     await GroupCRUD.add_users_to_group(
@@ -126,6 +125,7 @@ async def test_remove_member_from_group(
         user_mails=[user_1.mail, user_2.mail],
         db=db_session,
     )
+
     users_in_group_before = await GroupCRUD.get_users_in_group(
         created_group.id, db_session
     )
@@ -135,6 +135,7 @@ async def test_remove_member_from_group(
     users_in_group_after = await GroupCRUD.get_users_in_group(
         created_group.id, db_session
     )
+
     assert len(users_in_group_before) == 2
     assert len(users_in_group_after) == 1
     assert user_1.mail in [user.mail for user in users_in_group_after]
@@ -147,3 +148,55 @@ async def test_remove_member_from_group(
     )
     association_result = await db_session.execute(association_query)
     assert association_result.fetchone() is None
+
+    @pytest.mark.asyncio
+    async def test_remove_user_from_group_owner_change(
+        db_session: AsyncSession, two_users: list[PrivateUser]
+    ):
+        user_1, user_2 = two_users
+        group_create = GroupCreate(name=GROUP_1.name, owner_mail=user_1.mail)
+        created_group = await GroupCRUD.create_group(group_create, db_session)
+        await GroupCRUD.add_users_to_group(
+            group_id=created_group.id,
+            user_mails=[user_1.mail, user_2.mail],
+            db=db_session,
+        )
+
+        users_in_group_before = await GroupCRUD.get_users_in_group(
+            created_group.id, db_session
+        )
+        await GroupCRUD.remove_user_from_group(
+            group_id=created_group.id, member_mail=user_1.mail, db=db_session
+        )
+        users_in_group_after = await GroupCRUD.get_users_in_group(
+            created_group.id, db_session
+        )
+
+        assert len(users_in_group_before) == 2
+        assert len(users_in_group_after) == 1
+        assert user_2.mail in [user.mail for user in users_in_group_after]
+        assert user_1.mail not in [user.mail for user in users_in_group_after]
+
+        association_query = (
+            select(user_group_association)
+            .where(user_group_association.c.group_id == created_group.id)
+            .where(user_group_association.c.user_mail == user_1.mail)
+        )
+        association_result = await db_session.execute(association_query)
+        assert association_result.fetchone() is None
+
+        updated_group = await GroupCRUD.get_group(created_group.id, db_session)
+        assert updated_group.owner_mail == user_2.mail
+
+
+@pytest.mark.asyncio
+async def test_remove_last_user_from_group(
+    db_session: AsyncSession, two_groups: list[GroupGet]
+):
+    group_1, _ = two_groups
+    await GroupCRUD.remove_user_from_group(
+        group_id=group_1.id, member_mail=USER_1.mail, db=db_session
+    )
+
+    with pytest.raises(ValueError):
+        await GroupCRUD.get_group(group_1.id, db_session)

@@ -10,6 +10,7 @@ authors = [
 ]
 
 [tool.poetry.dependencies]
+python = "^3.12"
 aiohttp = "^3.9.1"
 asyncpg = "^0.29"
 fastapi = "^0.104.1"
@@ -19,7 +20,6 @@ httpx = "^0.26.0"
 pillow = "^10.2.0"
 playwright = "^1.40.0"
 psycopg2-binary = "^2.9.9"
-python = "^3.12"
 python-jose = "^3.3.0"
 python-Levenshtein = "^0.23.0"
 python-multipart = "^0.0.6"
