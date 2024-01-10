@@ -1,7 +1,7 @@
 import logging
 
 from pydantic import EmailStr
-from sqlalchemy import delete, exists, insert, select, update
+from sqlalchemy import asc, delete, exists, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.user import UserCRUD
@@ -106,6 +106,7 @@ class GroupCRUD:
             select(User)
             .join(user_group_association)
             .where(user_group_association.c.group_id == group_id)
+            .order_by(asc(User.created_at))
         )
         result = await db.execute(query)
         users_data = result.fetchall()
@@ -139,8 +140,14 @@ class GroupCRUD:
         member_mail: str,
         db: AsyncSession,
     ) -> None:
-        await GroupCRUD.get_group(group_id, db)
+        group = await GroupCRUD.get_group(group_id, db)
         await UserCRUD.get_user(member_mail, db)
+        users_in_group = await GroupCRUD.get_users_in_group(group_id, db)
+
+        if len(users_in_group) > 1 and member_mail == group.owner_mail:
+            await GroupCRUD.update_group(
+                group_id, GroupUpdate(owner_mail=users_in_group[1]), db
+            )
 
         query = (
             delete(user_group_association)
@@ -148,3 +155,6 @@ class GroupCRUD:
             .where(user_group_association.c.user_mail == member_mail)
         )
         await db.execute(query)
+
+        if len(users_in_group) == 1:
+            await GroupCRUD.delete_group(group_id, db)

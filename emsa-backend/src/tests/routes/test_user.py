@@ -3,6 +3,7 @@ from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.authorization import verify_password
 from src.crud.friend import FriendCRUD
 from src.crud.user import UserCRUD
 from src.routes.contracts import AddFriendRequest
@@ -122,7 +123,7 @@ async def test_remove_account(client: AsyncClient, advanced_use_case, db_session
 @pytest.mark.asyncio
 async def test_update_account(client: AsyncClient, advanced_use_case, db_session):
     user_to_update = advanced_use_case["user_ids"][0]
-    update_data = {"name": "UpdatedName", "password_hash": "UpdatedPassword"}
+    update_data = {"name": "UpdatedName", "password": "UpdatedPassword"}
 
     response = await client.put(
         "/update_account",
@@ -134,7 +135,7 @@ async def test_update_account(client: AsyncClient, advanced_use_case, db_session
 
     assert response.status_code == 200, response.json()
     assert updated_user.name == update_data["name"]
-    assert updated_user.password_hash == update_data["password_hash"]
+    assert verify_password(updated_user.password_hash, update_data["password"]) is True
     assert response_data["mail"] == updated_user.mail
     assert response_data["name"] == updated_user.name
 
@@ -404,6 +405,29 @@ async def test_decline_friend_request_no_sent_requests_error(
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "Friend request doesn't exist"
+
+
+@pytest.mark.asyncio
+async def test_remove_friend_request(
+    client: AsyncClient, db_session: AsyncSession, advanced_use_case
+):
+    # user 1 sends friend request to user 4
+    await FriendCRUD.create_friend_request(USER_1.mail, USER_4.mail, db_session)
+
+    response = await client.delete(
+        f"/remove_friend_request/{USER_4.mail}",
+        headers=await headers_for_user1(db_session),
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    friend_request_after = await FriendCRUD.get_pending_requests(
+        USER_4.mail, db_session
+    )
+    friend_sent_request_after = await FriendCRUD.get_sent_requests(
+        USER_1.mail, db_session
+    )
+    assert USER_1.mail not in [request.mail for request in friend_request_after]
+    assert USER_4.mail not in [request.mail for request in friend_sent_request_after]
 
 
 @pytest.mark.asyncio

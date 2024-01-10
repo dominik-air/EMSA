@@ -13,7 +13,7 @@ from src.authorization import (
 from src.crud.friend import FriendCRUD
 from src.crud.group import GroupCRUD
 from src.crud.user import UserCRUD
-from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser, UpdateUser
+from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser
 from src.database.session import get_db
 from src.exceptions import IncorrectUsernameOrPassword
 from src.routes.contracts import (
@@ -23,6 +23,7 @@ from src.routes.contracts import (
     LoginRequest,
     RegisterRequest,
     TokenResponse,
+    UpdateUserRequest,
 )
 from src.settings import settings
 
@@ -188,7 +189,7 @@ async def user_details(
     },
 )
 async def update_account(
-    update_data: UpdateUser,
+    update_data: UpdateUserRequest,
     db: AsyncSession = Depends(get_db),
     current_user: PublicUser = Depends(get_current_active_user),
 ) -> PublicUser:
@@ -347,6 +348,37 @@ async def decline_friend_request(
         await FriendCRUD.handle_delete_request(
             receiver_mail=current_user.mail,
             sender_mail=mail,
+            db=db,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.delete(
+    "/remove_friend_request/{mail}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove sent friend requests",
+    description="Remove friend request sent by current user from {mail}.",
+    responses={
+        status.HTTP_204_NO_CONTENT: {
+            "description": "Sent friend requests retrieved successfully",
+            "content": {"application/json": {}},
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "User not found or no sent friend requests",
+            "content": {"application/json": {}},
+        },
+    },
+)
+async def remove_friend_request(
+    mail: EmailStr,
+    db: AsyncSession = Depends(get_db),
+    current_user: PublicUser = Depends(get_current_active_user),
+) -> None:
+    try:
+        await FriendCRUD.handle_delete_request(
+            receiver_mail=mail,
+            sender_mail=current_user.mail,
             db=db,
         )
     except ValueError as e:

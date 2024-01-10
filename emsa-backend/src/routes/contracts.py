@@ -10,6 +10,11 @@ class RegisterRequest(LoginRequest):
     name: str = ""
 
 
+class UpdateUserRequest(BaseModel):
+    name: str | None = None
+    password: str | None = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

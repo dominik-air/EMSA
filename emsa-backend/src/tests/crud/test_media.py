@@ -1,5 +1,7 @@
+from datetime import datetime, timedelta
+
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.media import MediaCRUD
@@ -92,15 +94,24 @@ async def test_get_media_by_group(
 ):
     group_id = two_media_on_groups[0].group_id
     another_media = MediaCreate(**{"group_id": group_id, **MEDIA_DATA_1})
+    another_media.name = "should_be_first"
     expected_media = [
-        two_media_on_groups[0],
         await MediaCRUD.create_media(another_media, db_session),
+        two_media_on_groups[0],
     ]
+    update_query = (
+        update(Media)
+        .where(Media.id == two_media_on_groups[0].id)
+        .values(created_at=datetime.now() - timedelta(days=1))
+    )
+    await db_session.execute(update_query)
 
     media_list = await MediaCRUD.get_media_by_group(group_id, db_session)
 
     assert len(media_list) == 2
     for i, media in enumerate(media_list):
+        if i == 0:
+            assert media.name == "should_be_first"
         assert media.model_dump() == expected_media[i].model_dump()
 
 

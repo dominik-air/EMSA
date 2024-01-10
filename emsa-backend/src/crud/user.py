@@ -2,6 +2,7 @@ from jose import jwt
 from pydantic import EmailStr
 from sqlalchemy import delete, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from werkzeug.security import generate_password_hash
 
 from src.database.models import Friendship, Token, User
 from src.database.schemas import (
@@ -11,6 +12,7 @@ from src.database.schemas import (
     TokenGet,
     UpdateUser,
 )
+from src.routes.contracts import UpdateUserRequest
 from src.settings import settings
 
 
@@ -46,11 +48,16 @@ class UserCRUD:
 
     @staticmethod
     async def update_user(
-        mail: EmailStr, user: UpdateUser, db: AsyncSession
+        mail: EmailStr,
+        user: UpdateUserRequest,
+        db: AsyncSession,
     ) -> PrivateUser:
+        user_data = UpdateUser(**user.model_dump(exclude_none=True))
+        if user.password:
+            user_data.password_hash = generate_password_hash(user.password)
         query = (
             update(User)
-            .values(name=user.name, password_hash=user.password_hash)
+            .values(user_data.model_dump(exclude_none=True))
             .returning(User)
             .where(User.mail == mail)
         )

@@ -1,5 +1,5 @@
 from fuzzywuzzy import fuzz
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, desc, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.crud.group import GroupCRUD
@@ -38,7 +38,7 @@ class MediaCRUD:
 
     @staticmethod
     async def get_all_media(db: AsyncSession) -> list[MediaList]:
-        query = select(Media)
+        query = select(Media).order_by(desc(Media.created_at))
         result = await db.execute(query)
         fetched_all_media = result.fetchall()
         return [MediaList(**media[0].to_dict()) for media in fetched_all_media]

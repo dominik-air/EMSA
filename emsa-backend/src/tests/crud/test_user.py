@@ -2,10 +2,12 @@ import pytest
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.authorization import verify_password
 from src.crud.friend import FriendCRUD
 from src.crud.user import UserCRUD
 from src.database.models import FriendRequest, Friendship, User
-from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser, UpdateUser
+from src.database.schemas import FriendRequestGet, PrivateUser, PublicUser
+from src.routes.contracts import UpdateUserRequest
 from src.tests.conftest import USER_1, USER_2
 
 
@@ -42,20 +44,26 @@ async def test_user_list(db_session: AsyncSession):
         assert user == PublicUser(**users_ref[i].model_dump())
 
 
+@pytest.mark.parametrize(
+    "password, name",
+    [
+        ("jestemgigachad", "Nerd"),
+        ("jestemgigachad", None),
+        (None, "Nerd"),
+    ],
+)
 @pytest.mark.asyncio
-async def test_user_update(db_session: AsyncSession):
-    update_model = UpdateUser(**{"password_hash": "jestemgigachad", "name": "Nerd"})
+async def test_user_update(password, name, db_session: AsyncSession):
+    update_model = UpdateUserRequest(password=password, name=name)
     await UserCRUD.create_user(USER_1, db_session)
     updated_user = await UserCRUD.update_user(USER_1.mail, update_model, db_session)
     get_updated_user = await UserCRUD.get_user(USER_1.mail, db_session)
 
     assert updated_user.mail == get_updated_user.mail == USER_1.mail
-    assert updated_user.name == get_updated_user.name == update_model.name
-    assert (
-        updated_user.password_hash
-        == get_updated_user.password_hash
-        == update_model.password_hash
-    )
+    if name:
+        assert updated_user.name == get_updated_user.name == update_model.name
+    if password:
+        assert verify_password(get_updated_user.password_hash, password) is True
 
 
 @pytest.mark.asyncio
