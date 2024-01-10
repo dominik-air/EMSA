@@ -130,7 +130,7 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
           headers: headers,
         },
       );
-      setMemes(response.data.map((info) => MediaInfoToMeme(info)));
+      setMemes(response.data.reverse().map((info) => MediaInfoToMeme(info)));
     } catch (error) {
       console.error("Error fetching memes:", error);
     }
@@ -183,27 +183,23 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
     if (!file) {
       return;
     }
-    if (file && file.file instanceof File) {
-      const fileURL = URL.createObjectURL(file.file);
-      window.open(fileURL, "_blank");
-    }
     const form = new FormData();
     form.append("group_id", String(groupId));
     form.append("name", mediaName);
-    form.append("tags", JSON.stringify(tags));
+    tags.trim().split(" ").forEach((tag) => {
+      form.append(`tags`, tag);
+    });
     form.append("image", file.file, file.filename);
-    console.log(file.file);
     const headers = {
       "Content-Type": "multipart/form-data",
       Authorization: `Bearer ${localStorage.getItem("sessionToken")}`,
     };
     try {
-      const response = await axios.post<MediaInfo>(
+      await axios.post<MediaInfo>(
         `${API_URL}/add_image`,
         form,
         { headers: headers },
       );
-      console.log(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("Error:", error);
@@ -219,8 +215,10 @@ const ManageMemes: React.FC<ManageMemesProps> = ({ groupId, groupName }) => {
     } else if (memeSource) {
       await sendMemeSource();
     } else {
+      // TODO: handle empty inputs in the dialog
       console.log("No media!");
     }
+    await fetchMemes();
     handleDialogClose();
   };
 
